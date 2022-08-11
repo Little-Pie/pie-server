@@ -2,5 +2,4 @@ module Main where
 
 import Lib
 
-main :: IO ()
-main = someFunc
+main = run 3000 application
