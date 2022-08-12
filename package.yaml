@@ -24,6 +24,11 @@ dependencies:
 - wai
 - http-types
 - warp
+- bytestring
+- containers
+- cryptonite
+- aeson
+- postgresql-simple
 
 library:
   source-dirs: src
