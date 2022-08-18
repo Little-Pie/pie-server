@@ -3,7 +3,7 @@ CREATE TABLE users
    "name" TEXT NOT NULL,
    "login" TEXT NOT NULL,
    "password" TEXT NOT NULL,
-   "data" TIMESTAMPTZ NOT NULL,
+   "data" TIMESTAMP NOT NULL,
    "admin" BOOLEAN NOT NULL);
 
 --ALTER TABLE <table_name> ADD COLUMN <column_name> <data_type>
