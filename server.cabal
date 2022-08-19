@@ -27,6 +27,8 @@ library
   exposed-modules:
       Lib
       Parsing
+      Types.API.CreateUser
+      Types.API.EditUser
   other-modules:
       Paths_server
   hs-source-dirs:

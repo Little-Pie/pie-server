@@ -11,27 +11,23 @@ data UserList = UserList { users' :: [User] }
 instance ToJSON UserList where
   toJSON (UserList users) = object ["user_list" .= users]
 
-data User = User {id :: Int
+data User = User {user_id :: Int
                  ,name :: String
                  ,login :: String
                  ,password :: String
                  ,date :: UTCTime
                  ,admin :: Bool
+                 ,posting_news :: Bool
                  }
 
 instance ToJSON User where
-  toJSON (User id' name' login' password' date' admin') = object ["id" .= id'
-                                                    ,"name" .= name'
-                                                    ,"login" .= login']
-     
-data Body = Body {name1 :: String
-                 ,login1 :: String
-                 ,password1 :: String}
-
-instance FromJSON Body where
-  parseJSON (Object body) = Body <$> body .: "name"
-                                 <*> body .: "login"
-                                 <*> body .: "password"
+  toJSON (User user_id' name' login' password' date' admin' posting_news') = object ["id" .= user_id'
+                                                                               ,"name" .= name'
+                                                                               ,"login" .= login'
+                                                                               ,"created_at" .= date'
+                                                                               ,"is_admin" .= admin'
+                                                                               ,"posting_news" .= posting_news'
+                                                                               ]
 
 instance FromRow User where
-  fromRow = User <$> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = User <$> field <*> field <*> field <*> field <*> field <*> field <*> field
