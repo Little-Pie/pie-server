@@ -11,15 +11,17 @@ data Post = Post {postId :: Int
                  ,createdAt :: UTCTime
                  ,text :: String
                  ,authorId :: Int
+                 ,isPublished :: Bool
                  }
 
 instance ToJSON Post where
-  toJSON (Post postId title createdAt text authorId) = object ["id" .= postId
+  toJSON (Post postId title createdAt text authorId isPublished) = object ["id" .= postId
                                                               ,"title" .= title
                                                               ,"created_at" .= createdAt
                                                               ,"text" .= text
                                                               ,"author" .= authorId
+                                                              ,"is_published" .= isPublished
                                                               ]
 
 instance FromRow Post where
-  fromRow = Post <$> field <*> field <*> field <*> field <*> field
+  fromRow = Post <$> field <*> field <*> field <*> field <*> field <*> field

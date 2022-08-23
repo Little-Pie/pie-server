@@ -14,5 +14,5 @@ createPost conn body = case decode body :: Maybe CreatePost.CreatePostRequest of
   Just bodyParsed -> do
     let title' = CreatePost.title bodyParsed
     let text' = CreatePost.text bodyParsed
-    execute conn "INSERT INTO posts (title,text,author_id) VALUES (?,?,?)" $ (title',text',1 :: Int)
+    execute conn "INSERT INTO posts (title,text,author_id,is_published) VALUES (?,?,?,?)" $ (title',text',1 :: Int,False)
     pure "Post is created"

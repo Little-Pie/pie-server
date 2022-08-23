@@ -28,6 +28,7 @@ library
       Endpoints.CreatePost
       Endpoints.CreateUser
       Endpoints.EditUser
+      Helpers
       Types.API.CreatePost
       Types.API.CreateUser
       Types.API.EditUser
