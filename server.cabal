@@ -43,6 +43,7 @@ library
       aeson
     , aeson-pretty
     , base >=4.7 && <5
+    , base64-bytestring
     , bytestring
     , containers
     , cryptonite
@@ -64,6 +65,7 @@ executable server-exe
       aeson
     , aeson-pretty
     , base >=4.7 && <5
+    , base64-bytestring
     , bytestring
     , containers
     , cryptonite
@@ -87,6 +89,7 @@ test-suite server-test
       aeson
     , aeson-pretty
     , base >=4.7 && <5
+    , base64-bytestring
     , bytestring
     , containers
     , cryptonite

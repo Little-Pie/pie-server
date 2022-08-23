@@ -31,6 +31,7 @@ dependencies:
 - postgresql-simple
 - aeson-pretty
 - time
+- base64-bytestring
 
 library:
   source-dirs: src

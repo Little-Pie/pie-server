@@ -11,8 +11,8 @@ import Endpoints.CreatePost
 import Endpoints.PublishPost
 import Text.Read (readMaybe)
 import Network.Wai.Handler.Warp (run)
-import Network.Wai (Application,lazyRequestBody,rawPathInfo,rawQueryString,requestMethod,queryString)
-import Network.HTTP.Types (methodGet,methodPost)
+import Network.Wai (requestHeaders,Application,lazyRequestBody,rawPathInfo,rawQueryString,requestMethod,queryString)
+import Network.HTTP.Types (methodGet,methodPost,Header,RequestHeaders)
 import qualified Data.ByteString.Lazy.Char8 as LBSC
 import qualified Data.ByteString.Char8 as BS
 import Database.PostgreSQL.Simple
@@ -41,19 +41,23 @@ application req respond
         answer <- createUser conn body
         LBSC.putStrLn answer
         respond $ responseOk answer
-      "editUser" ->
-        case lookup' "id" queryItems of
-          Nothing -> respond $ responseBadRequest "Enter user id"
-          Just userId -> do
-            body <- bodyIO
-            putStrLn $ LBSC.unpack body
-            conn <- connect localPG
-            case readMaybe (BS.unpack userId) :: Maybe Int of
-              Nothing -> respond $ responseBadRequest "Enter user id"
-              Just userId' -> do
-                answer <- editUser conn body userId'
+      "editUser" -> do
+        conn <- connect localPG
+        (str, mbId) <- authorize conn base64LoginAndPassword
+        case mbId of
+          Nothing -> do
+            LBSC.putStrLn str
+            respond $ responseUnauthorized str
+          Just id -> do
+            --case lookup' "id" queryItems of
+              --Nothing -> respond $ responseBadRequest "Enter user id"
+              --Just userId -> do
+                LBSC.putStrLn str
+                body <- bodyIO
+                putStrLn $ LBSC.unpack body
+                answer <- editUser conn body id
                 LBSC.putStrLn answer
-                respond $ responseOk answer
+                respond $ responseOk $ str `mappend` "\n" `mappend` answer
       "createPost" -> do
         body <- bodyIO
         putStrLn $ LBSC.unpack body
@@ -107,3 +111,5 @@ application req respond
         query = rawQueryString req
         path = BS.tail $ rawPathInfo req
         bodyIO = lazyRequestBody req
+        headers = requestHeaders req
+        base64LoginAndPassword = snd $ head $ filter (\x -> fst x == "Authorization") headers
