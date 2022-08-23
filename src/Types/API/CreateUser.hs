@@ -4,9 +4,9 @@ module Types.API.CreateUser where
 
 import Data.Aeson 
 
-data CreateUserRequest = CreateUserRequest {createName :: String
-                                           ,createLogin :: String
-                                           ,createPassword :: String
+data CreateUserRequest = CreateUserRequest {name :: String
+                                           ,login :: String
+                                           ,password :: String
                                            }
 
 instance FromJSON CreateUserRequest where

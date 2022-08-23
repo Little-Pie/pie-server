@@ -25,10 +25,14 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
-      Parsing
+      Endpoints.CreatePost
+      Endpoints.CreateUser
+      Endpoints.EditUser
+      Types.API.CreatePost
       Types.API.CreateUser
       Types.API.EditUser
+      Types.Entities.Post
+      Types.Entities.User
   other-modules:
       Paths_server
   hs-source-dirs:

@@ -4,14 +4,12 @@ module Types.API.EditUser where
 
 import Data.Aeson 
 
-data EditUserRequest = EditUserRequest {editName :: Maybe String
-                                       ,editLogin :: Maybe String
-                                       ,editPassword :: Maybe String
-                                       ,editId :: Maybe Int
+data EditUserRequest = EditUserRequest {name :: Maybe String
+                                       ,login :: Maybe String
+                                       ,password :: Maybe String
                                        }
 
 instance FromJSON EditUserRequest where
   parseJSON (Object editUserRequest) = EditUserRequest <$> editUserRequest .:? "name"
                                                        <*> editUserRequest .:? "login"
                                                        <*> editUserRequest .:? "password"
-                                                       <*> editUserRequest .:? "int"
