@@ -5,7 +5,6 @@ module Endpoints.CreatePost where
 import qualified Types.API.CreatePost as CreatePost
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
-import Network.HTTP.Types (Query)
 import Database.PostgreSQL.Simple
 
 createPost :: Connection -> LBS.ByteString -> IO (LBS.ByteString)

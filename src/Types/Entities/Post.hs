@@ -16,12 +16,12 @@ data Post = Post {postId :: Int
 
 instance ToJSON Post where
   toJSON (Post postId title createdAt text authorId isPublished) = object ["id" .= postId
-                                                              ,"title" .= title
-                                                              ,"created_at" .= createdAt
-                                                              ,"text" .= text
-                                                              ,"author" .= authorId
-                                                              ,"is_published" .= isPublished
-                                                              ]
+                                                                          ,"title" .= title
+                                                                          ,"created_at" .= createdAt
+                                                                          ,"text" .= text
+                                                                          ,"author" .= authorId
+                                                                          ,"is_published" .= isPublished
+                                                                          ]
 
 instance FromRow Post where
   fromRow = Post <$> field <*> field <*> field <*> field <*> field <*> field

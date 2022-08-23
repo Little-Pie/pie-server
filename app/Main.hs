@@ -8,15 +8,15 @@ import Types.Entities.User
 import Endpoints.CreateUser
 import Endpoints.EditUser
 import Endpoints.CreatePost
+import Endpoints.PublishPost
+import Text.Read (readMaybe)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai (Application,lazyRequestBody,rawPathInfo,rawQueryString,requestMethod,queryString)
 import Network.HTTP.Types (methodGet,methodPost)
 import qualified Data.ByteString.Lazy.Char8 as LBSC
 import qualified Data.ByteString.Char8 as BS
 import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.Types
 import Data.Aeson.Encode.Pretty (encodePretty)
---import Data.Aeson
 --import Data.Time.Clock (UTCTime,getCurrentTime)
 
 main :: IO ()
@@ -48,9 +48,12 @@ application req respond
             body <- bodyIO
             putStrLn $ LBSC.unpack body
             conn <- connect localPG
-            answer <- editUser conn body (read (BS.unpack userId) :: Int) -- don't use read
-            LBSC.putStrLn answer
-            respond $ responseOk answer
+            case readMaybe (BS.unpack userId) :: Maybe Int of
+              Nothing -> respond $ responseBadRequest "Enter user id"
+              Just userId' -> do
+                answer <- editUser conn body userId'
+                LBSC.putStrLn answer
+                respond $ responseOk answer
       "createPost" -> do
         body <- bodyIO
         putStrLn $ LBSC.unpack body
@@ -58,6 +61,19 @@ application req respond
         answer <- createPost conn body
         LBSC.putStrLn answer
         respond $ responseOk answer
+      "publishPost" -> do
+        case lookup' "id" queryItems of
+          Nothing -> respond $ responseBadRequest "Enter post id"
+          Just postId -> do
+            body <- bodyIO
+            putStrLn $ LBSC.unpack body
+            conn <- connect localPG
+            case readMaybe (BS.unpack postId) :: Maybe Int of
+              Nothing -> respond $ responseBadRequest "Enter post id"
+              Just postId' -> do
+                answer <- publishPost conn postId'
+                LBSC.putStrLn answer
+                respond $ responseOk answer
       _ -> respond $ responseNotFound "Unknown method called"
   | path == "" = respond $
               if query /= ""
@@ -84,7 +100,7 @@ application req respond
                 case map title posts of
                   [""] -> respond $ responseNotFound "There are no posts."
                   _  -> do
-                    respond $ responseOk $ encodePretty posts
+                    respond $ responseOk $ encodePretty $ filter (\x -> isPublished x == True) posts
   | otherwise = respond $ responseNotFound "Unknown method called"
 
   where queryItems = queryString req
