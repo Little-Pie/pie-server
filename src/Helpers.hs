@@ -7,7 +7,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC
 import Data.ByteString.Base64
-import Network.HTTP.Types (toQuery,statusCode,methodGet,methodPost,status200,hContentType,Status,notFound404,badRequest400,unauthorized401,QueryItem,Query)
+import Network.HTTP.Types (toQuery,statusCode,methodGet,methodPost,status200,hContentType,Status,status500,notFound404,badRequest400,unauthorized401,QueryItem,Query)
 import Network.Wai (lazyRequestBody,Middleware, responseStatus,responseLBS,Application,rawPathInfo,rawQueryString,requestMethod,Response,queryString)
 import Database.PostgreSQL.Simple (Only(..),Connection,query,query_,ConnectInfo(..),defaultConnectInfo)
 
@@ -38,9 +38,10 @@ lookup' key' [] = Nothing
 lookup' key' ((key,value):items) | key' == key = value
                                  | otherwise = lookup' key' items
 
-responseOk, responseNotFound, responseBadRequest, responseUnauthorized
+responseOk, responseNotFound, responseBadRequest, responseUnauthorized, responseInternalError
   :: LBS.ByteString -> Response
 responseOk = responsePlainText status200
+responseInternalError = responsePlainText status500
 responseNotFound = responsePlainText notFound404
 responseBadRequest = responsePlainText badRequest400
 responseUnauthorized = responsePlainText unauthorized401
