@@ -6,10 +6,24 @@ import Types.Entities.User
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC
-import Data.ByteString.Base64
+import Data.Aeson
+import qualified Data.ByteString.Base64 as BASE
 import Network.HTTP.Types (toQuery,statusCode,methodGet,methodPost,status200,hContentType,Status,status500,notFound404,badRequest400,unauthorized401,QueryItem,Query)
 import Network.Wai (lazyRequestBody,Middleware, responseStatus,responseLBS,Application,rawPathInfo,rawQueryString,requestMethod,Response,queryString)
 import Database.PostgreSQL.Simple (Only(..),Connection,query,query_,ConnectInfo(..),defaultConnectInfo)
+
+data Config = Config {limit :: Int}
+
+instance FromJSON Config where
+  parseJSON (Object config) = Config <$> config .: "limit"  
+
+getConfig :: IO (Maybe Config)
+getConfig = do
+  rawJSON <- BS.readFile "config.json"
+  let result = decodeStrict rawJSON :: Maybe Config
+  case result of
+    Nothing -> return Nothing
+    Just conf -> return $ Just conf
 
 localPG :: ConnectInfo
 localPG = defaultConnectInfo
@@ -20,7 +34,7 @@ localPG = defaultConnectInfo
         }
 
 authorize :: Connection -> BS.ByteString -> IO (LBS.ByteString,Maybe Int)
-authorize conn base64LoginAndPassword = case decode base64LoginAndPassword of
+authorize conn base64LoginAndPassword = case BASE.decode base64LoginAndPassword of
   Left err -> pure (LBSC.pack err,Nothing)
   Right loginPassword -> do
     let login' = BS.takeWhile (/= ':') loginPassword

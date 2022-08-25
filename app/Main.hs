@@ -28,13 +28,17 @@ import Data.Aeson.Encode.Pretty (encodePretty)
 
 main :: IO ()
 main = do
-  putStrLn "Serving..."
-  run 4000 $ withLogging application
+  mbConfig <- getConfig
+  case mbConfig of
+    Nothing -> putStrLn "Couldn't parse config"
+    Just config -> do
+      putStrLn "Serving..."
+      run 4000 $ withLogging $ application config
 
---editPost,deletePost,limit-offset,пагинация,категории
+--limit-offset,сортировка,пагинация,категории
 
-application :: Application
-application req respond
+application :: Config -> Application
+application config req respond
   | requestMethod req /= methodPost && requestMethod req /= methodGet = respond $ responseBadRequest "Use method GET or POST"
   | requestMethod req == methodPost = do
     body <- bodyIO
@@ -136,28 +140,104 @@ application req respond
               if query' /= ""
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi GET!"
-  | path == "users" =
-              if query' /= ""
-              then respond $ responseBadRequest "No query parameters needed!"
-              else do
+  | path == "users" = case query' of
+    "" -> do
+      conn <- connect localPG
+      putStrLn "Connected to database"
+      userList <- query conn "select * from users limit (?)" $ (Only (limit config))
+      case map name userList of
+        [""] -> respond $ responseNotFound "There are no users."
+        _  -> respond $ responseOk $ encodePretty userList
+    _ -> case lookup' "limit" queryItems of
+      Nothing -> case lookup' "offset" queryItems of
+        Nothing -> do
+          conn <- connect localPG
+          putStrLn "Connected to database"
+          users <- query conn "select * from users limit (?)" $ (Only (limit config))
+          case map name users of
+            [""] -> respond $ responseNotFound "There are no users"
+            _  -> respond $ responseOk $ encodePretty users
+        Just offset ->
+          case readMaybe (BS.unpack offset) :: Maybe Int of
+            Nothing -> respond $ responseBadRequest "Offset should be a number"
+            Just offset' -> do
+              conn <- connect localPG
+              putStrLn "Connected to database"
+              users <- query conn "select * from users limit (?) offset (?)" $ (limit config,offset')
+              case map name users of
+                [""] -> respond $ responseNotFound "There are no users"
+                _  -> respond $ responseOk $ encodePretty users
+      Just lim -> case readMaybe (BS.unpack lim) :: Maybe Int of
+        Nothing -> respond $ responseBadRequest "Limit shold be a number"
+        Just lim' -> do
+          let limit' = if lim' > limit config || lim' < 0 then limit config else lim'
+          case lookup' "offset" queryItems of
+            Nothing -> do
+              conn <- connect localPG
+              putStrLn "Connected to database"
+              users <- query conn "select * from users limit (?)" $ (Only limit')
+              case map name users of
+                [""] -> respond $ responseNotFound "There are no users"
+                _  -> do
+                  respond $ responseOk $ encodePretty users
+            Just offset -> case readMaybe (BS.unpack offset) :: Maybe Int of
+              Nothing -> respond $ responseBadRequest "Offset should be a number"
+              Just offset' -> do
                 conn <- connect localPG
                 putStrLn "Connected to database"
-                userList <- query_ conn "select * from users order by id" :: IO [User]
-                case map name userList of
-                  [""] -> respond $ responseNotFound "There are no users."
-                  _  -> do
-                    respond $ responseOk $ encodePretty userList
-  | path == "posts" =
-              if query' /= ""
-              then respond $ responseBadRequest "No query parameters needed!"
-              else do
+                users <- query conn "select * from users limit (?) offset (?)" $ (limit',offset')
+                case map name users of
+                  [""] -> respond $ responseNotFound "There are no users"
+                  _  -> respond $ responseOk $ encodePretty users
+  | path == "posts" = case query' of
+    "" -> do
+      conn <- connect localPG
+      putStrLn "Connected to database"
+      posts <- query conn "select * from posts where is_published = true limit (?)" $ (Only (limit config))
+      case map title posts of
+        [""] -> respond $ responseNotFound "There are no posts"
+        _  -> respond $ responseOk $ encodePretty posts
+    _ -> case lookup' "limit" queryItems of
+      Nothing -> case lookup' "offset" queryItems of
+        Nothing -> do
+          conn <- connect localPG
+          putStrLn "Connected to database"
+          posts <- query conn "select * from posts where is_published = true limit (?)" $ (Only (limit config))
+          case map title posts of
+            [""] -> respond $ responseNotFound "There are no posts"
+            _  -> respond $ responseOk $ encodePretty posts
+        Just offset ->
+          case readMaybe (BS.unpack offset) :: Maybe Int of
+            Nothing -> respond $ responseBadRequest "Offset should be a number"
+            Just offset' -> do
+              conn <- connect localPG
+              putStrLn "Connected to database"
+              posts <- query conn "select * from posts where is_published = true limit (?) offset (?)" $ (limit config,offset')
+              case map title posts of
+                [""] -> respond $ responseNotFound "There are no posts"
+                _  -> respond $ responseOk $ encodePretty posts
+      Just lim -> case readMaybe (BS.unpack lim) :: Maybe Int of
+        Nothing -> respond $ responseBadRequest "Limit shold be a number"
+        Just lim' -> do
+          let limit' = if lim' > limit config || lim' < 0 then limit config else lim'
+          case lookup' "offset" queryItems of
+            Nothing -> do
+              conn <- connect localPG
+              putStrLn "Connected to database"
+              posts <- query conn "select * from posts where is_published = true limit (?)" $ (Only limit')
+              case map title posts of
+                [""] -> respond $ responseNotFound "There are no posts"
+                _  -> do
+                  respond $ responseOk $ encodePretty posts
+            Just offset -> case readMaybe (BS.unpack offset) :: Maybe Int of
+              Nothing -> respond $ responseBadRequest "Offset should be a number"
+              Just offset' -> do
                 conn <- connect localPG
                 putStrLn "Connected to database"
-                posts <- query_ conn "select * from posts order by id" :: IO [Post]
+                posts <- query conn "select * from posts where is_published = true limit (?) offset (?)" $ (limit',offset')
                 case map title posts of
                   [""] -> respond $ responseNotFound "There are no posts."
-                  _  -> do
-                    respond $ responseOk $ encodePretty $ filter (\x -> isPublished x == True) posts
+                  _  -> respond $ responseOk $ encodePretty posts
   | path == "makeAuthor" = do
     conn <- connect localPG
     (str, mbId) <- authorize conn base64LoginAndPassword

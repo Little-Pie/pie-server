@@ -12,7 +12,7 @@ publishPost conn postId' = do
     case postId' `elem` (map postId posts) of
         False -> pure "There are no posts with such id"
         True -> do
-          posts <- query conn "select * from posts order where id=(?)" $ (Only postId') :: IO [Post]
+          posts <- query conn "select * from posts where id=(?)" $ (Only postId') :: IO [Post]
           case posts of
             [] -> pure "Something went wrong: empty list"
             [x] -> if isPublished x 
