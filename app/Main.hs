@@ -5,6 +5,12 @@ module Main where
 import Helpers
 import Types.Entities.Post
 import Types.Entities.User
+import Endpoints.DeleteUser
+import Endpoints.DeletePost
+import Endpoints.EditPost
+import Endpoints.RemoveAdmin
+import Endpoints.RemoveAuthor
+import Endpoints.MakeAdmin
 import Endpoints.MakeAuthor
 import Endpoints.CreateUser
 import Endpoints.EditUser
@@ -24,6 +30,8 @@ main :: IO ()
 main = do
   putStrLn "Serving..."
   run 4000 $ withLogging application
+
+--editPost,deletePost,limit-offset,пагинация,категории
 
 application :: Application
 application req respond
@@ -54,7 +62,7 @@ application req respond
                   Just userId -> do
                     admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
                     case admin of
-                      [] -> respond $ responseInternalError "Something went wrong"
+                      [] -> respond $ responseInternalError "Something went wrong: empty list"
                       _ -> case isAdmin $ head admin of
                         True -> do
                           case readMaybe (BS.unpack userId) :: Maybe Int of
@@ -86,42 +94,43 @@ application req respond
                 putStrLn $ LBSC.unpack body
                 answer <- createPost conn body id
                 LBSC.putStrLn answer
-                respond $ responseOk answer
-      "publishPost" -> do
+                respond $ responseOk answer 
+      "editPost" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
-            admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
-            case isAdmin $ head admin of
-              True -> do
-                case lookup' "id" queryItems of
-                  Nothing -> respond $ responseBadRequest "Enter post id"
-                  Just postId -> do
-                    putStrLn $ LBSC.unpack body
-                    case readMaybe (BS.unpack postId) :: Maybe Int of
+            case lookup' "id" queryItems of
+              Nothing -> respond $ responseBadRequest "Enter post id"
+              Just postId -> do
+                admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+                case admin of
+                  [] -> respond $ responseInternalError "Something went wrong: empty list"
+                  _ -> case isAdmin $ head admin of
+                    True -> case readMaybe (BS.unpack postId) :: Maybe Int of
                       Nothing -> respond $ responseBadRequest "Post id should be a number"
-                      Just postId' -> do
-                        answer <- publishPost conn postId'
+                      Just userId' -> do
+                        answer <- editPost conn body userId'
+                        LBSC.putStrLn str
+                        putStrLn $ LBSC.unpack body
                         LBSC.putStrLn answer
-                        respond $ responseOk answer
-              False -> do
-                case lookup' "id" queryItems of
-                  Nothing -> respond $ responseBadRequest "Enter post id"
-                  Just postId -> do
-                    putStrLn $ LBSC.unpack body
-                    case readMaybe (BS.unpack postId) :: Maybe Int of
-                      Nothing -> respond $ responseBadRequest "Post id should be a number"
-                      Just postId' -> do
-                        post <- query conn "select * from posts where id=(?)" (Only postId') :: IO [Post]
-                        case id == authorId (head post) of
-                          False -> respond $ responseNotFound "You don't have unpublished news with such id"
-                          True -> do
-                            answer <- publishPost conn postId'
-                            LBSC.putStrLn answer
-                            respond $ responseOk $ str `mappend` "\n" `mappend` answer 
+                        respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                    False -> case lookup' "id" queryItems of
+                      Nothing -> respond $ responseBadRequest "Enter post id"
+                      Just postId -> case readMaybe (BS.unpack postId) :: Maybe Int of
+                        Nothing -> respond $ responseBadRequest "Post id should be a number"
+                        Just postId' -> do
+                          post <- query conn "select * from posts where id=(?)" (Only postId') :: IO [Post]
+                          case post of
+                            [] -> respond $ responseInternalError "Something went wrong: empty list"
+                            [x] -> case id == authorId x of
+                              False -> respond $ responseNotFound "You're not able to edit this post"
+                              True -> do
+                                answer <- editPost conn body postId'
+                                LBSC.putStrLn answer
+                                respond $ responseOk $ str `mappend` "\n" `mappend` answer
       _ -> respond $ responseNotFound "Unknown method called"
   | path == "" = respond $
               if query' /= ""
@@ -173,6 +182,172 @@ application req respond
                       answer <- makeAuthor conn userId'
                       LBSC.putStrLn answer
                       respond $ responseOk $ str `mappend` "\n" `mappend` answer
+  | path == "removeAuthor" = do
+    conn <- connect localPG
+    (str, mbId) <- authorize conn base64LoginAndPassword
+    case mbId of
+      Nothing -> do
+        LBSC.putStrLn str
+        respond $ responseUnauthorized str
+      Just id -> do
+        admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+        case isAdmin $ head admin of
+          False -> respond $ responseNotFound "You can not remove authors"
+          True -> do
+            if query' == ""
+            then respond $ responseBadRequest "Enter user id"
+            else do
+              case lookup' "id" queryItems of
+                Nothing -> respond $ responseBadRequest "Enter user id"
+                Just userId -> do
+                  case readMaybe (BS.unpack userId) :: Maybe Int of
+                    Nothing -> respond $ responseBadRequest "User id should be a number"
+                    Just userId' -> do
+                      answer <- removeAuthor conn userId'
+                      LBSC.putStrLn answer
+                      respond $ responseOk $ str `mappend` "\n" `mappend` answer
+  | path == "makeAdmin" = do
+    conn <- connect localPG
+    (str, mbId) <- authorize conn base64LoginAndPassword
+    case mbId of
+      Nothing -> do
+        LBSC.putStrLn str
+        respond $ responseUnauthorized str
+      Just id -> do
+        admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+        case isAdmin $ head admin of
+          False -> respond $ responseNotFound "You can not make admins"
+          True -> do
+            if query' == ""
+            then respond $ responseBadRequest "Enter user id"
+            else do
+              case lookup' "id" queryItems of
+                Nothing -> respond $ responseBadRequest "Enter user id"
+                Just userId -> do
+                  case readMaybe (BS.unpack userId) :: Maybe Int of
+                    Nothing -> respond $ responseBadRequest "User id should be a number"
+                    Just userId' -> do
+                      answer <- makeAdmin conn userId'
+                      LBSC.putStrLn answer
+                      respond $ responseOk $ str `mappend` "\n" `mappend` answer
+  | path == "removeAdmin" = do
+    conn <- connect localPG
+    (str, mbId) <- authorize conn base64LoginAndPassword
+    case mbId of
+      Nothing -> do
+        LBSC.putStrLn str
+        respond $ responseUnauthorized str
+      Just id -> do
+        admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+        case isAdmin $ head admin of
+          False -> respond $ responseNotFound "You can not remove admins"
+          True -> do
+            if query' == ""
+            then respond $ responseBadRequest "Enter user id"
+            else do
+              case lookup' "id" queryItems of
+                Nothing -> respond $ responseBadRequest "Enter user id"
+                Just userId -> do
+                  case readMaybe (BS.unpack userId) :: Maybe Int of
+                    Nothing -> respond $ responseBadRequest "User id should be a number"
+                    Just userId' -> do
+                      answer <- removeAdmin conn userId'
+                      LBSC.putStrLn answer
+                      respond $ responseOk $ str `mappend` "\n" `mappend` answer
+  | path == "publishPost" = do
+    conn <- connect localPG
+    (str, mbId) <- authorize conn base64LoginAndPassword
+    case mbId of
+      Nothing -> do
+        LBSC.putStrLn str
+        respond $ responseUnauthorized str
+      Just id -> do
+        admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+        case isAdmin $ head admin of
+          True -> case lookup' "id" queryItems of
+            Nothing -> respond $ responseBadRequest "Enter post id"
+            Just postId -> do
+              case readMaybe (BS.unpack postId) :: Maybe Int of
+                Nothing -> respond $ responseBadRequest "Post id should be a number"
+                Just postId' -> do
+                  answer <- publishPost conn postId'
+                  LBSC.putStrLn answer
+                  respond $ responseOk answer
+          False -> do
+            case lookup' "id" queryItems of
+              Nothing -> respond $ responseBadRequest "Enter post id"
+              Just postId -> case readMaybe (BS.unpack postId) :: Maybe Int of
+                Nothing -> respond $ responseBadRequest "Post id should be a number"
+                Just postId' -> do
+                  post <- query conn "select * from posts where id=(?)" (Only postId') :: IO [Post]
+                  case id == authorId (head post) of
+                    False -> respond $ responseNotFound "You don't have unpublished news with such id"
+                    True -> do
+                      answer <- publishPost conn postId'
+                      LBSC.putStrLn answer
+                      respond $ responseOk $ str `mappend` "\n" `mappend` answer
+  | path == "deletePost" = do
+    conn <- connect localPG
+    (str, mbId) <- authorize conn base64LoginAndPassword
+    case mbId of
+      Nothing -> do
+        LBSC.putStrLn str
+        respond $ responseUnauthorized str
+      Just id -> do
+        admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+        case isAdmin $ head admin of
+          True -> case lookup' "id" queryItems of
+            Nothing -> respond $ responseBadRequest "Enter post id"
+            Just postId -> do
+              case readMaybe (BS.unpack postId) :: Maybe Int of
+                Nothing -> respond $ responseBadRequest "Post id should be a number"
+                Just postId' -> do
+                  answer <- deletePost conn postId'
+                  LBSC.putStrLn answer
+                  respond $ responseOk answer
+          False -> do
+            case lookup' "id" queryItems of
+              Nothing -> respond $ responseBadRequest "Enter post id"
+              Just postId -> case readMaybe (BS.unpack postId) :: Maybe Int of
+                Nothing -> respond $ responseBadRequest "Post id should be a number"
+                Just postId' -> do
+                  post <- query conn "select * from posts where id=(?)" (Only postId') :: IO [Post]
+                  case id == authorId (head post) of
+                    False -> respond $ responseNotFound "You don't have news with such id"
+                    True -> do
+                      answer <- deletePost conn postId'
+                      LBSC.putStrLn answer
+                      respond $ responseOk $ str `mappend` "\n" `mappend` answer
+  | path == "deleteUser" = do
+    conn <- connect localPG
+    (str, mbId) <- authorize conn base64LoginAndPassword
+    case mbId of
+      Nothing -> do
+        LBSC.putStrLn str
+        respond $ responseUnauthorized str
+      Just id -> do
+        admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+        case isAdmin $ head admin of
+          True -> case lookup' "id" queryItems of
+            Nothing -> respond $ responseBadRequest "Enter user id"
+            Just userId -> do
+              case readMaybe (BS.unpack userId) :: Maybe Int of
+                Nothing -> respond $ responseBadRequest "User id should be a number"
+                Just userId' -> do
+                  answer <- deleteUser conn userId'
+                  LBSC.putStrLn answer
+                  respond $ responseOk answer
+          False -> do
+            case lookup' "id" queryItems of
+              Nothing -> respond $ responseBadRequest "Enter user id"
+              Just userId -> case readMaybe (BS.unpack userId) :: Maybe Int of
+                Nothing -> respond $ responseBadRequest "User id should be a number"
+                Just userId' -> if id /= userId'
+                then respond $ responseNotFound $ str `mappend` "\n" `mappend` "You can not delete other users"
+                else do
+                  answer <- deleteUser conn userId'
+                  LBSC.putStrLn answer
+                  respond $ responseOk $ str `mappend` "\n" `mappend` answer
   | otherwise = respond $ responseNotFound "Unknown method called"
 
   where queryItems = queryString req
