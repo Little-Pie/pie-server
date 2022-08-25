@@ -35,7 +35,7 @@ main = do
       putStrLn "Serving..."
       run 4000 $ withLogging $ application config
 
---limit-offset,сортировка,пагинация,категории
+--сортировка,категории,хэширование,логирование
 
 application :: Config -> Application
 application config req respond
@@ -140,104 +140,72 @@ application config req respond
               if query' /= ""
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi GET!"
-  | path == "users" = case query' of
-    "" -> do
-      conn <- connect localPG
-      putStrLn "Connected to database"
-      userList <- query conn "select * from users limit (?)" $ (Only (limit config))
-      case map name userList of
-        [""] -> respond $ responseNotFound "There are no users."
-        _  -> respond $ responseOk $ encodePretty userList
-    _ -> case lookup' "limit" queryItems of
-      Nothing -> case lookup' "offset" queryItems of
-        Nothing -> do
-          conn <- connect localPG
-          putStrLn "Connected to database"
-          users <- query conn "select * from users limit (?)" $ (Only (limit config))
-          case map name users of
-            [""] -> respond $ responseNotFound "There are no users"
-            _  -> respond $ responseOk $ encodePretty users
-        Just offset ->
-          case readMaybe (BS.unpack offset) :: Maybe Int of
+  | path == "users" = case lookup' "limit" queryItems of
+    Nothing -> case lookup' "offset" queryItems of
+      Nothing -> do
+        users <- getLimitedUsers localPG (limit config) (offset config)
+        case map name users of
+          [""] -> respond $ responseNotFound "There are no users"
+          _  -> respond $ responseOk $ encodePretty users
+      Just offset ->
+        case readMaybe (BS.unpack offset) :: Maybe Int of
+          Nothing -> respond $ responseBadRequest "Offset should be a number"
+          Just offset' -> do
+            users <- getLimitedUsers localPG (limit config) offset'
+            case map name users of
+              [""] -> respond $ responseNotFound "There are no users"
+              _  -> respond $ responseOk $ encodePretty users
+    Just lim -> case readMaybe (BS.unpack lim) :: Maybe Int of
+      Nothing -> respond $ responseBadRequest "Limit shold be a number"
+      Just lim' -> do
+        let limit' = if lim' > limit config || lim' < 0 then limit config else lim'
+        case lookup' "offset" queryItems of
+          Nothing -> do
+            users <- getLimitedUsers localPG limit' (offset config)
+            case map name users of
+              [""] -> respond $ responseNotFound "There are no users"
+              _  -> do
+                respond $ responseOk $ encodePretty users
+          Just offset -> case readMaybe (BS.unpack offset) :: Maybe Int of
             Nothing -> respond $ responseBadRequest "Offset should be a number"
             Just offset' -> do
-              conn <- connect localPG
-              putStrLn "Connected to database"
-              users <- query conn "select * from users limit (?) offset (?)" $ (limit config,offset')
+              users <- getLimitedUsers localPG limit'offset'
               case map name users of
                 [""] -> respond $ responseNotFound "There are no users"
                 _  -> respond $ responseOk $ encodePretty users
-      Just lim -> case readMaybe (BS.unpack lim) :: Maybe Int of
-        Nothing -> respond $ responseBadRequest "Limit shold be a number"
-        Just lim' -> do
-          let limit' = if lim' > limit config || lim' < 0 then limit config else lim'
-          case lookup' "offset" queryItems of
-            Nothing -> do
-              conn <- connect localPG
-              putStrLn "Connected to database"
-              users <- query conn "select * from users limit (?)" $ (Only limit')
-              case map name users of
-                [""] -> respond $ responseNotFound "There are no users"
-                _  -> do
-                  respond $ responseOk $ encodePretty users
-            Just offset -> case readMaybe (BS.unpack offset) :: Maybe Int of
-              Nothing -> respond $ responseBadRequest "Offset should be a number"
-              Just offset' -> do
-                conn <- connect localPG
-                putStrLn "Connected to database"
-                users <- query conn "select * from users limit (?) offset (?)" $ (limit',offset')
-                case map name users of
-                  [""] -> respond $ responseNotFound "There are no users"
-                  _  -> respond $ responseOk $ encodePretty users
-  | path == "posts" = case query' of
-    "" -> do
-      conn <- connect localPG
-      putStrLn "Connected to database"
-      posts <- query conn "select * from posts where is_published = true limit (?)" $ (Only (limit config))
-      case map title posts of
-        [""] -> respond $ responseNotFound "There are no posts"
-        _  -> respond $ responseOk $ encodePretty posts
-    _ -> case lookup' "limit" queryItems of
-      Nothing -> case lookup' "offset" queryItems of
-        Nothing -> do
-          conn <- connect localPG
-          putStrLn "Connected to database"
-          posts <- query conn "select * from posts where is_published = true limit (?)" $ (Only (limit config))
-          case map title posts of
-            [""] -> respond $ responseNotFound "There are no posts"
-            _  -> respond $ responseOk $ encodePretty posts
-        Just offset ->
-          case readMaybe (BS.unpack offset) :: Maybe Int of
+  | path == "posts" = case lookup' "limit" queryItems of
+    Nothing -> case lookup' "offset" queryItems of
+      Nothing -> do
+        posts <- getLimitedPosts localPG (limit config) (offset config)
+        case map title posts of
+          [""] -> respond $ responseNotFound "There are no posts"
+          _  -> respond $ responseOk $ encodePretty posts
+      Just offset ->
+        case readMaybe (BS.unpack offset) :: Maybe Int of
+          Nothing -> respond $ responseBadRequest "Offset should be a number"
+          Just offset' -> do
+            posts <- getLimitedPosts localPG (limit config) offset'
+            case map title posts of
+              [""] -> respond $ responseNotFound "There are no posts"
+              _  -> respond $ responseOk $ encodePretty posts
+    Just lim -> case readMaybe (BS.unpack lim) :: Maybe Int of
+      Nothing -> respond $ responseBadRequest "Limit shold be a number"
+      Just lim' -> do
+        let limit' = if lim' > limit config || lim' < 0 then limit config else lim'
+        case lookup' "offset" queryItems of
+          Nothing -> do
+            posts <- getLimitedPosts localPG limit' (offset config)
+            case map title posts of
+              [""] -> respond $ responseNotFound "There are no posts"
+              _  -> do
+                respond $ responseOk $ encodePretty posts
+          Just offset -> case readMaybe (BS.unpack offset) :: Maybe Int of
             Nothing -> respond $ responseBadRequest "Offset should be a number"
             Just offset' -> do
-              conn <- connect localPG
-              putStrLn "Connected to database"
-              posts <- query conn "select * from posts where is_published = true limit (?) offset (?)" $ (limit config,offset')
+              posts <- getLimitedPosts localPG limit' offset'
               case map title posts of
-                [""] -> respond $ responseNotFound "There are no posts"
+                [""] -> respond $ responseNotFound "There are no posts."
                 _  -> respond $ responseOk $ encodePretty posts
-      Just lim -> case readMaybe (BS.unpack lim) :: Maybe Int of
-        Nothing -> respond $ responseBadRequest "Limit shold be a number"
-        Just lim' -> do
-          let limit' = if lim' > limit config || lim' < 0 then limit config else lim'
-          case lookup' "offset" queryItems of
-            Nothing -> do
-              conn <- connect localPG
-              putStrLn "Connected to database"
-              posts <- query conn "select * from posts where is_published = true limit (?)" $ (Only limit')
-              case map title posts of
-                [""] -> respond $ responseNotFound "There are no posts"
-                _  -> do
-                  respond $ responseOk $ encodePretty posts
-            Just offset -> case readMaybe (BS.unpack offset) :: Maybe Int of
-              Nothing -> respond $ responseBadRequest "Offset should be a number"
-              Just offset' -> do
-                conn <- connect localPG
-                putStrLn "Connected to database"
-                posts <- query conn "select * from posts where is_published = true limit (?) offset (?)" $ (limit',offset')
-                case map title posts of
-                  [""] -> respond $ responseNotFound "There are no posts."
-                  _  -> respond $ responseOk $ encodePretty posts
   | path == "makeAuthor" = do
     conn <- connect localPG
     (str, mbId) <- authorize conn base64LoginAndPassword

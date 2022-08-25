@@ -2,6 +2,7 @@
 
 module Helpers where
 
+import Types.Entities.Post
 import Types.Entities.User
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
@@ -10,12 +11,13 @@ import Data.Aeson
 import qualified Data.ByteString.Base64 as BASE
 import Network.HTTP.Types (toQuery,statusCode,methodGet,methodPost,status200,hContentType,Status,status500,notFound404,badRequest400,unauthorized401,QueryItem,Query)
 import Network.Wai (lazyRequestBody,Middleware, responseStatus,responseLBS,Application,rawPathInfo,rawQueryString,requestMethod,Response,queryString)
-import Database.PostgreSQL.Simple (Only(..),Connection,query,query_,ConnectInfo(..),defaultConnectInfo)
+import Database.PostgreSQL.Simple (connect,Only(..),Connection,query,query_,ConnectInfo(..),defaultConnectInfo)
 
-data Config = Config {limit :: Int}
+data Config = Config {limit :: Int
+                     ,offset :: Int}
 
 instance FromJSON Config where
-  parseJSON (Object config) = Config <$> config .: "limit"  
+  parseJSON (Object config) = Config <$> config .: "limit" <*> config .: "offset"
 
 getConfig :: IO (Maybe Config)
 getConfig = do
@@ -46,6 +48,18 @@ authorize conn base64LoginAndPassword = case BASE.decode base64LoginAndPassword 
         if loginPassword == loginPassword'
         then pure ("User is authorized",Just (userId us))
         else pure ("Wrong password",Nothing)
+
+getLimitedPosts :: ConnectInfo -> Int -> Int -> IO [Post]
+getLimitedPosts localPG limit offset = do
+  conn <- connect localPG
+  putStrLn "Connected to database"
+  query conn "select * from posts where is_published = true limit (?) offset (?)" $ (limit,offset)
+
+getLimitedUsers :: ConnectInfo -> Int -> Int -> IO [User]
+getLimitedUsers localPG limit offset = do
+  conn <- connect localPG
+  putStrLn "Connected to database"
+  query conn "select * from users limit (?) offset (?)" $ (limit,offset)
 
 lookup' :: BS.ByteString -> [(BS.ByteString, Maybe BS.ByteString)] -> Maybe BS.ByteString
 lookup' key' [] = Nothing
