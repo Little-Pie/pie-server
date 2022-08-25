@@ -8,10 +8,16 @@ import Database.PostgreSQL.Simple
 
 publishPost :: Connection -> Int -> IO (LBS.ByteString)
 publishPost conn postId' = do
-    posts <- query_ conn "select * from posts order by id"
+    posts <- query_ conn "select * from posts"
     case postId' `elem` (map postId posts) of
         False -> pure "There are no posts with such id"
         True -> do
-          mapM putStrLn $ map show $ map postId posts
-          execute conn "UPDATE posts SET is_published = (?) WHERE id = (?)" $ (True,postId')
-          pure "Post is published"
+          posts <- query conn "select * from posts order where id=(?)" $ (Only postId') :: IO [Post]
+          case posts of
+            [] -> pure "Something went wrong: empty list"
+            [x] -> if isPublished x 
+            then pure "The post is already published"
+            else do
+              mapM putStrLn $ map show $ map postId posts
+              execute conn "UPDATE posts SET is_published = (?) WHERE id = (?)" $ (True,postId')
+              pure "Post is published"

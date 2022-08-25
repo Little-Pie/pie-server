@@ -27,12 +27,19 @@ library
   exposed-modules:
       Endpoints.CreatePost
       Endpoints.CreateUser
+      Endpoints.DeletePost
+      Endpoints.DeleteUser
+      Endpoints.EditPost
       Endpoints.EditUser
+      Endpoints.MakeAdmin
       Endpoints.MakeAuthor
       Endpoints.PublishPost
+      Endpoints.RemoveAdmin
+      Endpoints.RemoveAuthor
       Helpers
       Types.API.CreatePost
       Types.API.CreateUser
+      Types.API.EditPost
       Types.API.EditUser
       Types.Entities.Post
       Types.Entities.User

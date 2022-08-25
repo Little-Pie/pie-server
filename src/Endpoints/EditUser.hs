@@ -6,7 +6,6 @@ import Types.Entities.User
 import qualified Types.API.EditUser as API
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
-import Network.HTTP.Types (Query)
 import Database.PostgreSQL.Simple
 
 editUser :: Connection -> LBS.ByteString -> Int -> IO (LBS.ByteString)

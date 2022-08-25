@@ -1,19 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Endpoints.MakeAuthor where
+module Endpoints.MakeAdmin where
 
 import Types.Entities.User
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
 import Database.PostgreSQL.Simple
 
-makeAuthor :: Connection -> Int -> IO (LBS.ByteString)
-makeAuthor conn userId' = do
+makeAdmin :: Connection -> Int -> IO (LBS.ByteString)
+makeAdmin conn userId' = do
     users <- query conn "select * from users where id=(?)" (Only userId') :: IO [User]
     case users of
       [] -> pure "There are no users with such id"
-      [x] -> if isAuthor x
-      then pure "This user is already author"
+      [x] -> if isAdmin x
+      then pure "This user is already admin"
       else do
-        execute conn "UPDATE users SET is_author = (?) WHERE id = (?)" $ (True,userId')
-        pure "Now this user is an author"
+        execute conn "UPDATE users SET is_admin = (?) WHERE id = (?)" $ (True,userId')
+        pure "Now this user is an admin"
