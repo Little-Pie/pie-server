@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Endpoints.CreateCategory
       Endpoints.CreatePost
       Endpoints.CreateUser
       Endpoints.DeletePost
@@ -37,10 +38,13 @@ library
       Endpoints.RemoveAdmin
       Endpoints.RemoveAuthor
       Helpers
+      Types.API.CreateCategory
       Types.API.CreatePost
       Types.API.CreateUser
       Types.API.EditPost
       Types.API.EditUser
+      Types.API.Id
+      Types.Entities.Category
       Types.Entities.Post
       Types.Entities.User
   other-modules:
