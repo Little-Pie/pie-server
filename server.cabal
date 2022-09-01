@@ -38,7 +38,7 @@ library
       Endpoints.RemoveAdmin
       Endpoints.RemoveAuthor
       Helpers
-      Rooting
+      Routing
       Types.API.CreateCategory
       Types.API.CreatePost
       Types.API.CreateUser

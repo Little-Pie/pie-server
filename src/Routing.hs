@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Rooting where
+module Routing where
 
 import Helpers
 import Types.Entities.Post
@@ -271,14 +271,24 @@ application conn config req respond
     users <- query conn "select * from users limit (?) offset (?)" (limit', offset') :: IO [User]
     respond $ responseOk $ encodePretty users
   | path == "posts" = do
+    let (mbAuthor, mbCategoryId, mbTitle, mbText) = (lookup' "author" queryItems,lookup' "category_id" queryItems,lookup' "title" queryItems,lookup' "text" queryItems)
+    let (mbCreatedAt, mbCreatedUntil, mbCreatedSince) = (lookup' "created_at" queryItems,lookup' "created_until" queryItems,lookup' "created_since" queryItems)
+    let filterByCreatedAt = fromMaybe ("") ((\n -> " AND date(posts.created_at) = '" <> Query n <> "' ") <$> mbCreatedAt)
+    let filterByCreatedUntil = fromMaybe ("") ((\n -> " AND date(posts.created_at) < '" <> Query n <> "' ") <$> mbCreatedUntil)
+    let filterByCreatedSince = fromMaybe ("") ((\n -> " AND date(posts.created_at) > '" <> Query n <> "' ") <$> mbCreatedSince)
+    let filterByAuthor = fromMaybe ("") ((\n -> " AND users.name = '" <> Query n <> "' ") <$> mbAuthor)
+    let filterByCategoryId = fromMaybe ("") ((\n -> " AND category_id = " <> Query n <> " ") <$> mbCategoryId)
+    let filterByTitle = fromMaybe ("") ((\n -> " AND title like '%" <> Query n <> "%' ") <$> mbTitle)
+    let filterByText = fromMaybe ("") ((\n -> " AND text like '%" <> Query n <> "%' ") <$> mbText)
+    let filterBy = filterByCreatedAt <> filterByCreatedUntil <> filterByCreatedSince <> filterByAuthor <> filterByCategoryId <> filterByTitle <> filterByText
     let sorts = ["category","created_at","title","author"]
-    let initQuery = "SELECT posts.id,posts.title,posts.text,posts.category_id,posts.created_at,posts.author_id,posts.is_published,users.name,categories.name FROM posts JOIN users ON posts.author_id = users.id JOIN categories ON posts.category_id = categories.id WHERE is_published = true"
+    let initQuery = "SELECT posts.*,users.name,categories.name FROM posts JOIN users ON posts.author_id = users.id JOIN categories ON posts.category_id = categories.id WHERE is_published = true"
     let sortBy = fromMaybe ("") ((\n -> if n `elem` sorts then (if n == "category" then " order by categories.name " else (if n == "author" then " order by users.name " else " order by " <> Query n)) else "") <$> lookup' "sort_by" queryItems)
     let (mbLimit, mbOffset) = (join $ readMaybe . BS.unpack <$> lookup' "limit" queryItems :: Maybe Int, join $ readMaybe . BS.unpack <$> lookup' "offset" queryItems :: Maybe Int)
     let cfgLimit = limit config
     let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
     let offset' = fromMaybe (offset config) mbOffset
-    posts <- query conn (initQuery <> sortBy <> " limit (?) offset (?)") (limit', offset') :: IO [API.GetPosts]
+    posts <- query conn (initQuery <> filterBy <> sortBy <> " limit (?) offset (?)") (limit', offset') :: IO [API.GetPosts]
     respond $ responseOk $ encodePretty posts
   | otherwise = respond $ responseNotFound "Unknown method called"
 
