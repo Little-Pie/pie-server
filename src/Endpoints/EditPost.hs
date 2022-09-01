@@ -20,7 +20,7 @@ editPost conn body postId' = case decode body :: Maybe API.EditPostRequest of
         case post' of
           [] -> pure "Something went wrong: empty list"
           [x] -> do
-            let newPost = Post {
+            let newPost = x {
               title = maybe (title x) id (API.title bodyParsed),
               text = maybe (text x) id (API.text bodyParsed)}
             execute conn "UPDATE posts SET (title,text) = (?,?) WHERE id = (?)" $ (title newPost,text newPost,postId')

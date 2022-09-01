@@ -19,7 +19,7 @@ publishPost conn body userId = case decode body :: Maybe API.IdRequest of
       [] -> pure "Something went wrong: empty list"
       [x] -> case isAdmin x of
         True -> do
-          posts <- query conn "select * from posts where id=" (Only id') :: IO [Post]
+          posts <- query conn "select * from posts where id=(?)" (Only id') :: IO [Post]
           case posts of
             [] -> pure "There are no posts with such id"
             [x] -> if isPublished x 
@@ -28,13 +28,13 @@ publishPost conn body userId = case decode body :: Maybe API.IdRequest of
                   execute conn "UPDATE posts SET is_published = (?) WHERE id = (?)" $ (True,id')
                   pure "Post is published"
         False -> do
-          posts <- query conn "select * from posts where id=" (Only id') :: IO [Post]
+          posts <- query conn "select * from posts where id=(?)" (Only id') :: IO [Post]
           case posts of
             [] ->  pure "There are no posts with such id"
             [x] -> case userId == authorId x of
               False -> pure "You don't have unpublished news with such id"
               True -> do
-                posts <- query conn "select * from posts where id=" (Only id') :: IO [Post]
+                posts <- query conn "select * from posts where id=(?)" (Only id') :: IO [Post]
                 case posts of
                   [] -> pure "There are no posts with such id"
                   [x] -> if isPublished x 

@@ -38,11 +38,13 @@ library
       Endpoints.RemoveAdmin
       Endpoints.RemoveAuthor
       Helpers
+      Rooting
       Types.API.CreateCategory
       Types.API.CreatePost
       Types.API.CreateUser
       Types.API.EditPost
       Types.API.EditUser
+      Types.API.GetPosts
       Types.API.Id
       Types.Entities.Category
       Types.Entities.Post

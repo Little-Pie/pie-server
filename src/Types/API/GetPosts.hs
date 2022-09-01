@@ -1,29 +1,33 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Types.Entities.Post where
+module Types.API.GetPosts where
 
 import Data.Aeson 
 import Database.PostgreSQL.Simple.FromRow
 import Data.Time.Clock (UTCTime)
 
-data Post = Post {postId :: Int
+data GetPosts = GetPosts {postId :: Int
                  ,title :: String
                  ,text :: String
                  ,categoryId :: Int
                  ,createdAt :: UTCTime
                  ,authorId :: Int
                  ,isPublished :: Bool
+                 ,authorName :: String
+                 ,categoryName :: String
                  }
 
-instance ToJSON Post where
-  toJSON (Post postId title text categoryId createdAt authorId isPublished) = object ["id" .= postId
+instance ToJSON GetPosts where
+  toJSON (GetPosts postId title text categoryId createdAt authorId isPublished authorName categoryName) = object ["id" .= postId
                                                                                      ,"title" .= title
                                                                                      ,"created_at" .= createdAt
                                                                                      ,"text" .= text
                                                                                      ,"category_id" .= categoryId
+                                                                                     ,"category_name" .= categoryName
                                                                                      ,"author" .= authorId
+                                                                                     ,"author_name" .= authorName
                                                                                      ,"is_published" .= isPublished
                                                                                      ]
 
-instance FromRow Post where
-  fromRow = Post <$> field <*> field <*> field <*> field <*> field <*> field <*> field
+instance FromRow GetPosts where
+  fromRow = GetPosts <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
