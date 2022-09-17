@@ -10,4 +10,4 @@ data CreateCategoryRequest = CreateCategoryRequest {name :: String
 
 instance FromJSON CreateCategoryRequest where
   parseJSON (Object createCategoryRequest) = CreateCategoryRequest <$> createCategoryRequest .: "name"
-                                                                   <*> createCategoryRequest .:? "parent_category_id"
+                                                                   <*> createCategoryRequest .:? "parentCategoryId"

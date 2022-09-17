@@ -20,9 +20,9 @@ instance ToJSON User where
   toJSON (User {..}) = object ["id" .= userId
                               ,"name" .= name
                               ,"login" .= login
-                              ,"created_at" .= createdAt
-                              ,"is_admin" .= isAdmin
-                              ,"is_author" .= isAuthor
+                              ,"createdAt" .= createdAt
+                              ,"isAdmin" .= isAdmin
+                              ,"isAuthor" .= isAuthor
                               ]
 
 instance FromRow User where

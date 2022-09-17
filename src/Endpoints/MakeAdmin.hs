@@ -19,5 +19,5 @@ makeAdmin conn body = case decode body :: Maybe API.IdRequest of
       [x] -> if isAdmin x
       then pure "This user is already admin"
       else do
-        execute conn "UPDATE users SET is_admin = (?) WHERE id = (?)" $ (True,id')
+        execute conn "UPDATE users SET isAdmin = (?) WHERE id = (?)" $ (True,id')
         pure "Now this user is an admin"

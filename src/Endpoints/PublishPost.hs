@@ -25,7 +25,7 @@ publishPost conn body userId = case decode body :: Maybe API.IdRequest of
             [x] -> if isPublished x 
                 then pure "The post is already published"
                 else do
-                  execute conn "UPDATE posts SET is_published = (?) WHERE id = (?)" $ (True,id')
+                  execute conn "UPDATE posts SET isPublished = (?) WHERE id = (?)" $ (True,id')
                   pure "Post is published"
         False -> do
           posts <- query conn "select * from posts where id=(?)" (Only id') :: IO [Post]
@@ -40,5 +40,5 @@ publishPost conn body userId = case decode body :: Maybe API.IdRequest of
                   [x] -> if isPublished x 
                     then pure "The post is already published"
                     else do
-                      execute conn "UPDATE posts SET is_published = (?) WHERE id = (?)" $ (True,id')
+                      execute conn "UPDATE posts SET isPublished = (?) WHERE id = (?)" $ (True,id')
                       pure "Post is published"

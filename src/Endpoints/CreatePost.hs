@@ -2,6 +2,8 @@
 
 module Endpoints.CreatePost where
 
+import DbQuery.Category
+import DbQuery.Post
 import Types.Entities.Category
 import qualified Types.API.CreatePost as CreatePost
 import qualified Data.ByteString.Lazy as LBS
@@ -14,10 +16,8 @@ createPost conn body userId = case decode body :: Maybe CreatePost.CreatePostReq
   Just bodyParsed -> do
     let title' = CreatePost.title bodyParsed
     let text' = CreatePost.text bodyParsed
-    let category_id' = CreatePost.categoryId bodyParsed
-    category <- query conn "select * from categories where id=(?)" (Only category_id') :: IO [Category]
+    let categoryId' = CreatePost.categoryId bodyParsed
+    category <- getCategoryById conn categoryId'
     case category of
       [] -> pure "No categories with such id"
-      _ -> do
-        execute conn "INSERT INTO posts (title,text,author_id,is_published,category_id) VALUES (?,?,?,?,?)" $ (title',text',userId,False,category_id')
-        pure "Post is created"
+      _ -> insertNewPost conn title' text' categoryId' userId

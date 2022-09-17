@@ -55,7 +55,7 @@ getQueryFilters queryItems = foldl (\acc n -> case lookup' n queryItems of
                                                 Just filterParam -> (n,filterParam):acc) [] filters
 
 filters :: [BS.ByteString]
-filters = ["created_at","created_until","created_since","author","category_id","title","text"] 
+filters = ["createdAt","createdUntil","createdSince","author","categoryId","title","text"] 
 
 lookup' :: BS.ByteString -> [(BS.ByteString, Maybe BS.ByteString)] -> Maybe BS.ByteString
 lookup' key' [] = Nothing

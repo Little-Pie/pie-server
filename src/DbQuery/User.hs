@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module DBReq.DBReqUser where
+module DbQuery.User where
 
 import Types.Entities.User
 import Database.PostgreSQL.Simple

@@ -14,7 +14,7 @@ data Category = Category {id :: Int
 instance ToJSON Category where
   toJSON (Category id name parentCategoryId) = object ["id" .= id
                                                       ,"name" .= name
-                                                      ,"parent_category_id" .= parentCategoryId
+                                                      ,"parentCategoryId" .= parentCategoryId
                                                       ]
 
 instance FromRow Category where

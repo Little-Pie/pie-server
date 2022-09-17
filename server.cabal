@@ -25,9 +25,9 @@ source-repository head
 
 library
   exposed-modules:
-      DBReq.DBReqCategory
-      DBReq.DBReqShowPosts
-      DBReq.DBReqUser
+      DbQuery.Category
+      DbQuery.Post
+      DbQuery.User
       Endpoints.CreateCategory
       Endpoints.CreatePost
       Endpoints.CreateUser

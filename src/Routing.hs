@@ -2,7 +2,8 @@
 
 module Routing where
 
-import DbQuery.ShowPosts
+import DbQuery.User
+import DbQuery.Post
 import DbQuery.Category
 import Helpers
 import Types.Entities.Post
@@ -42,8 +43,6 @@ application conn config req respond
               else responseOk "Hi POST!"
       "createUser" -> do
         putStrLn $ LBSC.unpack body
-        --time <- getCurrentTime
-        --let timeStamp = LBSC.pack $ take 19 $ show time
         answer <- createUser conn body
         LBSC.putStrLn answer
         respond $ responseOk answer
@@ -273,7 +272,7 @@ application conn config req respond
     respond $ responseOk $ encodePretty users
   | path == "posts" = do
     let queryFilters = getQueryFilters queryItems
-    let mbQuerySortBy = lookup' "sort_by" queryItems
+    let mbQuerySortBy = lookup' "sortBy" queryItems
     let (mbLimit, mbOffset) = (join $ readMaybe . BS.unpack <$> lookup' "limit" queryItems :: Maybe Int, join $ readMaybe . BS.unpack <$> lookup' "offset" queryItems :: Maybe Int)
     let cfgLimit = limit config
     let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit

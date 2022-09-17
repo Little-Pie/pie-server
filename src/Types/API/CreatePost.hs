@@ -12,4 +12,4 @@ data CreatePostRequest = CreatePostRequest {title :: String
 instance FromJSON CreatePostRequest where
   parseJSON (Object createPostRequest) = CreatePostRequest <$> createPostRequest .: "title"
                                                            <*> createPostRequest .: "text"
-                                                           <*> createPostRequest .: "category_id"
+                                                           <*> createPostRequest .: "categoryId"

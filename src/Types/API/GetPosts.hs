@@ -20,13 +20,13 @@ data GetPosts = GetPosts {postId :: Int
 instance ToJSON GetPosts where
   toJSON (GetPosts postId title text categoryId createdAt authorId isPublished authorName categoryName) = object ["id" .= postId
                                                                                      ,"title" .= title
-                                                                                     ,"created_at" .= createdAt
+                                                                                     ,"createdAt" .= createdAt
                                                                                      ,"text" .= text
-                                                                                     ,"category_id" .= categoryId
-                                                                                     ,"category_name" .= categoryName
+                                                                                     ,"categoryId" .= categoryId
+                                                                                     ,"categoryName" .= categoryName
                                                                                      ,"author" .= authorId
-                                                                                     ,"author_name" .= authorName
-                                                                                     ,"is_published" .= isPublished
+                                                                                     ,"authorName" .= authorName
+                                                                                     ,"isPublished" .= isPublished
                                                                                      ]
 
 instance FromRow GetPosts where

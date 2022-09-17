@@ -2,7 +2,7 @@
 
 module Endpoints.CreateCategory where
 
-import DBReq.DBReqCategory
+import DbQuery.Category
 import Types.Entities.User
 import Types.Entities.Category
 import qualified Types.API.CreateCategory as API
@@ -24,14 +24,14 @@ createCategory conn body userId  = case decode body :: Maybe API.CreateCategoryR
         True -> do
           case mbParentCategoryId of
             Nothing -> do
-              categories <- getGeneralCategoryWithName conn name'
+              categories <- getGeneralCategoryByName conn name'
               case categories of
                 [] -> do
                   insertNewGeneralCategory conn name'
                   pure "Category is created"
                 categories' -> pure "This category already exists"
             Just parentCategoryId' -> do
-              categories <- getCategoryWithNameAndParent conn name' parentCategoryId'
+              categories <- getCategoryByNameAndParent conn name' parentCategoryId'
               case categories of
                 [] -> do
                   insertNewCategory conn name' parentCategoryId'

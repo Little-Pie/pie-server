@@ -19,5 +19,5 @@ removeAuthor conn body = case decode body :: Maybe API.IdRequest of
       [x] -> if not $ isAuthor x
       then pure "This user is already not author"
       else do
-        execute conn "UPDATE users SET is_author = (?) WHERE id = (?)" $ (False,id')
+        execute conn "UPDATE users SET isAuthor = (?) WHERE id = (?)" $ (False,id')
         pure "Now this user is not an author"
