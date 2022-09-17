@@ -49,17 +49,13 @@ authorize conn base64LoginAndPassword = case BASE.decode base64LoginAndPassword 
         then pure ("User is authorized",Just (userId us))
         else pure ("Wrong password",Nothing)
 
-getLimitedPosts :: ConnectInfo -> Int -> Int -> IO [Post]
-getLimitedPosts localPG limit offset = do
-  conn <- connect localPG
-  putStrLn "Connected to database"
-  query conn "select * from posts where is_published = true limit (?) offset (?)" $ (limit,offset)
+getQueryFilters :: [(BS.ByteString, Maybe BS.ByteString)] -> [(BS.ByteString, BS.ByteString)]
+getQueryFilters queryItems = foldl (\acc n -> case lookup' n queryItems of
+                                                Nothing -> acc
+                                                Just filterParam -> (n,filterParam):acc) [] filters
 
-getLimitedUsers :: ConnectInfo -> Int -> Int -> IO [User]
-getLimitedUsers localPG limit offset = do
-  conn <- connect localPG
-  putStrLn "Connected to database"
-  query conn "select * from users limit (?) offset (?)" $ (limit,offset)
+filters :: [BS.ByteString]
+filters = ["created_at","created_until","created_since","author","category_id","title","text"] 
 
 lookup' :: BS.ByteString -> [(BS.ByteString, Maybe BS.ByteString)] -> Maybe BS.ByteString
 lookup' key' [] = Nothing
