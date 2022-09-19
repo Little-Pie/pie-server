@@ -11,7 +11,7 @@ getCategoryById conn id =
 
 getGeneralCategoryByName :: Connection -> String -> IO [Category]
 getGeneralCategoryByName conn name =
-  query conn "SELECT * FROM categories WHERE name=(?) AND parentId=null" (Only name) :: IO [Category]
+  query conn "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=null" (Only name) :: IO [Category]
 
 insertNewGeneralCategory :: Connection -> String -> IO ()
 insertNewGeneralCategory conn name = do
@@ -20,9 +20,9 @@ insertNewGeneralCategory conn name = do
 
 getCategoryByNameAndParent ::  Connection -> String -> Int -> IO [Category]
 getCategoryByNameAndParent conn name parentCategoryId = do
-  query conn "SELECT * FROM categories WHERE name=(?) AND parentId=(?)" (name,parentCategoryId) :: IO [Category]
+  query conn "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=(?)" (name,parentCategoryId) :: IO [Category]
 
 insertNewCategory :: Connection -> String -> Int -> IO ()
 insertNewCategory conn name parentCategoryId = do
-  execute conn "INSERT INTO categories (name,parentId) VALUES (?,?)" (name,parentCategoryId)
+  execute conn "INSERT INTO categories (name,\"parentId\") VALUES (?,?)" (name,parentCategoryId)
   pure ()

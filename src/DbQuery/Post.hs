@@ -12,10 +12,10 @@ import Data.Maybe (fromMaybe)
 
 insertNewPost :: Connection -> String -> String -> Int -> Int -> IO (LBS.ByteString)
 insertNewPost conn title text categoryId userId = do
-  execute conn "INSERT INTO posts (title,text,authorId,isPublished,categoryId) VALUES (?,?,?,?,?)" (title,text,userId,False,categoryId)
+  execute conn "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") VALUES (?,?,?,?,?)" (title,text,userId,False,categoryId)
   pure "Post is created"
 
-initQuery = "SELECT posts.*,users.name,categories.name FROM posts JOIN users ON posts.authorId = users.id JOIN categories ON posts.categoryId = categories.id WHERE isPublished = true"
+initQuery = "SELECT posts.*,users.name,categories.name FROM posts JOIN users ON \"posts.authorId\" = users.id JOIN categories ON \"posts.categoryId\" = categories.id WHERE \"isPublished\" = true"
 
 getSortBy :: (Maybe BS.ByteString) -> Query
 getSortBy mbSortBy = fromMaybe ("") ((\n -> if n `elem` sorts then (if n == "category" then " order by categories.name " else (if n == "author" then " order by users.name " else " order by " <> Query n)) else "") <$> mbSortBy)
@@ -28,11 +28,11 @@ getFilterBy queryFilters = mconcat $ map (\(filter',filterParam) -> createFilter
 
 createFilterDBReq :: BS.ByteString -> BS.ByteString -> Query
 createFilterDBReq filt filterParam = case filt of
-  "createdAt" -> " AND date(posts.createdAt) = '" <> Query filterParam <> "' "
-  "createdUntil" -> " AND date(posts.createdAt) < '" <> Query filterParam <> "' "
-  "createdSince" -> " AND date(posts.createdAt) > '" <> Query filterParam <> "' "
+  "createdAt" -> " AND date(\"posts.createdAt\") = '" <> Query filterParam <> "' "
+  "createdUntil" -> " AND date(\"posts.createdAt\") < '" <> Query filterParam <> "' "
+  "createdSince" -> " AND date(\"posts.createdAt\") > '" <> Query filterParam <> "' "
   "author" -> " AND users.name = '" <> Query filterParam <> "' "
-  "categoryId" -> " AND categoryId = " <> Query filterParam <> " "
+  "categoryId" -> " AND \"categoryId\" = " <> Query filterParam <> " "
   "title" -> " AND title like '%" <> Query filterParam <> "%' "
   "text" -> " AND text like '%" <> Query filterParam <> "%' "
 

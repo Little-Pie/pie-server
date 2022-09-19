@@ -30,8 +30,8 @@ getConfig = do
 localPG :: ConnectInfo
 localPG = defaultConnectInfo
         { connectHost = "localhost"
-        , connectDatabase = "postgres"
-        , connectUser = "postgres"
+        , connectDatabase = "server"
+        , connectUser = "server"
         , connectPassword = "5368"
         }
 

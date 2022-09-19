@@ -19,5 +19,5 @@ makeAuthor conn body = case decode body :: Maybe API.IdRequest of
       [x] -> if isAuthor x
       then pure "This user is already author"
       else do
-        execute conn "UPDATE users SET isAuthor = (?) WHERE id = (?)" $ (True,id')
+        execute conn "UPDATE users SET \"isAuthor\" = (?) WHERE id = (?)" $ (True,id')
         pure "Now this user is an author"

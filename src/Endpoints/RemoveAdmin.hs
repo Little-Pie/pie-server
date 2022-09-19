@@ -19,5 +19,5 @@ removeAdmin conn body = case decode body :: Maybe API.IdRequest of
       [x] -> if not $ isAdmin x
       then pure "This user is already not admin"
       else do
-        execute conn "UPDATE users SET isAdmin = (?) WHERE id = (?)" $ (False,id')
+        execute conn "UPDATE users SET \"isAdmin\" = (?) WHERE id = (?)" $ (False,id')
         pure "Now this user is not an admin"
