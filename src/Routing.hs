@@ -8,6 +8,9 @@ import qualified DbQuery.Category as DBC
 import Helpers
 import Types.Entities.Post
 import Types.Entities.User
+import Endpoints.GetPostById
+import Endpoints.GetUserById
+import Endpoints.GetCategoryById
 import Endpoints.CreateCategory
 import Endpoints.DeleteUser
 import Endpoints.DeletePost
@@ -42,10 +45,18 @@ application conn config req respond
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi POST!"
       "createUser" -> do
-        putStrLn $ LBSC.unpack body
         answer <- createUser conn body
         LBSC.putStrLn answer
         respond $ responseOk answer
+      "userById" -> do
+        userResponse <- getUserById conn body
+        respond userResponse
+      "postById" -> do
+        postResponse <- getPostById conn body
+        respond postResponse
+      "categoryById" -> do
+        categoryResponse <- getCategoryById conn body
+        respond categoryResponse
       "editUser" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -55,7 +66,7 @@ application conn config req respond
           Just id -> do
                 case lookup' "id" queryItems of
                   Just userId -> do
-                    admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+                    admin <- DBU.getUserById conn id
                     case admin of
                       [] -> respond $ responseInternalError "Something went wrong: empty list"
                       _ -> case isAdmin $ head admin of
@@ -82,7 +93,7 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
-            author <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+            author <- DBU.getUserById conn id
             case isAuthor $ head author of
               False -> respond $ responseNotFound "You can not post news"
               True -> do
@@ -100,7 +111,7 @@ application conn config req respond
             case lookup' "id" queryItems of
               Nothing -> respond $ responseBadRequest "Enter post id"
               Just postId -> do
-                admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+                admin <- DBU.getUserById conn id
                 case admin of
                   [] -> respond $ responseInternalError "Something went wrong: empty list"
                   _ -> case isAdmin $ head admin of
@@ -117,7 +128,7 @@ application conn config req respond
                       Just postId -> case readMaybe (BS.unpack postId) :: Maybe Int of
                         Nothing -> respond $ responseBadRequest "Post id should be a number"
                         Just postId' -> do
-                          post <- query conn "select * from posts where id=(?)" (Only postId') :: IO [Post]
+                          post <- DBP.getPostById conn postId'
                           case post of
                             [] -> respond $ responseInternalError "Something went wrong: empty list"
                             [x] -> case id == authorId x of
@@ -133,7 +144,7 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
-            admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+            admin <- DBU.getUserById conn id
             case isAdmin $ head admin of
               False -> respond $ responseNotFound "You can not make authors"
               True -> do
@@ -156,7 +167,7 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
-            admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+            admin <- DBU.getUserById conn id
             case isAdmin $ head admin of
               False -> respond $ responseNotFound "You can not remove authors"
               True -> do
@@ -179,7 +190,7 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
-            admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+            admin <- DBU.getUserById conn id
             case isAdmin $ head admin of
               False -> respond $ responseNotFound "You can not make admins"
               True -> do
@@ -202,7 +213,7 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
-            admin <- query conn "select * from users where id=(?)" (Only id) :: IO [User]
+            admin <- DBU.getUserById conn id
             case isAdmin $ head admin of
               False -> respond $ responseNotFound "You can not remove admins"
               True -> do
@@ -268,7 +279,7 @@ application conn config req respond
     let cfgLimit = limit config
     let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
     let offset' = fromMaybe (offset config) mbOffset
-    users <- query conn "select * from users limit (?) offset (?)" (limit', offset') :: IO [User]
+    users <- DBU.showUsers conn limit' offset'
     respond $ responseOk $ encodePretty users
   | path == "posts" = do
     let queryFilters = getQueryFilters queryItems

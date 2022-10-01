@@ -35,6 +35,9 @@ library
       Endpoints.DeleteUser
       Endpoints.EditPost
       Endpoints.EditUser
+      Endpoints.GetCategoryById
+      Endpoints.GetPostById
+      Endpoints.GetUserById
       Endpoints.MakeAdmin
       Endpoints.MakeAuthor
       Endpoints.PublishPost

@@ -11,7 +11,7 @@ getUsers conn = query_ conn "select * from users"
 
 getUserById :: Connection -> Int -> IO [User]
 getUserById conn userId =
-  query conn "SELECT * FROM users WHERE id=(?)" (Only userId) :: IO [User]
+  query conn "SELECT * FROM users WHERE id=(?)" (Only userId)
 
 insertNewUser :: Connection -> String -> String -> String -> IO (LBS.ByteString)
 insertNewUser conn name login password = do
@@ -47,3 +47,6 @@ removeAuthor :: Connection -> Int -> IO (LBS.ByteString)
 removeAuthor conn userId = do
   execute conn "UPDATE users SET \"isAuthor\" = (?) WHERE id = (?)" $ (False,userId)
   pure "Now this user is not an author"
+
+showUsers :: Connection -> Int -> Int -> IO [User]
+showUsers conn limit offset = query conn "select * from users limit (?) offset (?)" (limit, offset)
