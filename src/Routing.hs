@@ -45,18 +45,17 @@ application conn config req respond
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi POST!"
       "createUser" -> do
-        answer <- createUser conn body
-        LBSC.putStrLn answer
-        respond $ responseOk answer
+        response <- createUser conn body
+        respond response
       "userById" -> do
-        userResponse <- getUserById conn body
-        respond userResponse
+        response <- getUserById conn body
+        respond response
       "postById" -> do
-        postResponse <- getPostById conn body
-        respond postResponse
+        response <- getPostById conn body
+        respond response
       "categoryById" -> do
-        categoryResponse <- getCategoryById conn body
-        respond categoryResponse
+        response <- getCategoryById conn body
+        respond response
       "editUser" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -74,18 +73,12 @@ application conn config req respond
                           case readMaybe (BS.unpack userId) :: Maybe Int of
                             Nothing -> respond $ responseBadRequest "User id should be a number"
                             Just userId' -> do
-                              answer <- editUser conn body userId'
-                              LBSC.putStrLn str
-                              putStrLn $ LBSC.unpack body
-                              LBSC.putStrLn answer
-                              respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                              response <- editUser conn body userId'
+                              respond response
                         False -> respond $ responseBadRequest "Only admin can edit other users"
                   Nothing -> do
-                    LBSC.putStrLn str
-                    putStrLn $ LBSC.unpack body
-                    answer <- editUser conn body id
-                    LBSC.putStrLn answer
-                    respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                    response <- editUser conn body id
+                    respond response
       "createPost" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -98,9 +91,9 @@ application conn config req respond
               False -> respond $ responseNotFound "You can not post news"
               True -> do
                 putStrLn $ LBSC.unpack body
-                answer <- createPost conn body id
-                LBSC.putStrLn answer
-                respond $ responseOk answer 
+                response <- createPost conn body id
+                LBSC.putStrLn response
+                respond $ responseOk response 
       "editPost" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -118,11 +111,11 @@ application conn config req respond
                     True -> case readMaybe (BS.unpack postId) :: Maybe Int of
                       Nothing -> respond $ responseBadRequest "Post id should be a number"
                       Just userId' -> do
-                        answer <- editPost conn body userId'
+                        response <- editPost conn body userId'
                         LBSC.putStrLn str
                         putStrLn $ LBSC.unpack body
-                        LBSC.putStrLn answer
-                        respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                        LBSC.putStrLn response
+                        respond $ responseOk $ str `mappend` "\n" `mappend` response
                     False -> case lookup' "id" queryItems of
                       Nothing -> respond $ responseBadRequest "Enter post id"
                       Just postId -> case readMaybe (BS.unpack postId) :: Maybe Int of
@@ -134,9 +127,9 @@ application conn config req respond
                             [x] -> case id == authorId x of
                               False -> respond $ responseNotFound "You're not able to edit this post"
                               True -> do
-                                answer <- editPost conn body postId'
-                                LBSC.putStrLn answer
-                                respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                                response <- editPost conn body postId'
+                                LBSC.putStrLn response
+                                respond $ responseOk $ str `mappend` "\n" `mappend` response
       "makeAuthor" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -157,9 +150,8 @@ application conn config req respond
                       case readMaybe (BS.unpack userId) :: Maybe Int of
                         Nothing -> respond $ responseBadRequest "User id should be a number"
                         Just userId' -> do
-                          answer <- makeAuthor conn body
-                          LBSC.putStrLn answer
-                          respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                          response <- makeAuthor conn body
+                          respond response
       "removeAuthor" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -180,9 +172,8 @@ application conn config req respond
                       case readMaybe (BS.unpack userId) :: Maybe Int of
                         Nothing -> respond $ responseBadRequest "User id should be a number"
                         Just userId' -> do
-                          answer <- removeAuthor conn body
-                          LBSC.putStrLn answer
-                          respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                          response <- removeAuthor conn body
+                          respond response
       "makeAdmin" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -203,9 +194,8 @@ application conn config req respond
                       case readMaybe (BS.unpack userId) :: Maybe Int of
                         Nothing -> respond $ responseBadRequest "User id should be a number"
                         Just userId' -> do
-                          answer <- makeAdmin conn body
-                          LBSC.putStrLn answer
-                          respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                          response <- makeAdmin conn body
+                          respond response
       "removeAdmin" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -226,9 +216,8 @@ application conn config req respond
                       case readMaybe (BS.unpack userId) :: Maybe Int of
                         Nothing -> respond $ responseBadRequest "User id should be a number"
                         Just userId' -> do
-                          answer <- removeAdmin conn body
-                          LBSC.putStrLn answer
-                          respond $ responseOk $ str `mappend` "\n" `mappend` answer
+                          response <- removeAdmin conn body
+                          respond response
       "publishPost" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -236,9 +225,9 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just userId -> do
-            answer <- publishPost conn body userId
-            LBSC.putStrLn answer
-            respond $ responseOk answer
+            response <- publishPost conn body userId
+            LBSC.putStrLn response
+            respond $ responseOk response
       "deletePost" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -246,9 +235,9 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just userId -> do
-            answer <- deletePost conn body userId
-            LBSC.putStrLn answer
-            respond $ responseOk $ str `mappend` "\n" `mappend` answer
+            response <- deletePost conn body userId
+            LBSC.putStrLn response
+            respond $ responseOk $ str `mappend` "\n" `mappend` response
       "deleteUser" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -256,9 +245,8 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just userId -> do
-            answer <- deleteUser conn body userId
-            LBSC.putStrLn answer
-            respond $ responseOk $ str `mappend` "\n" `mappend` answer
+            response <- deleteUser conn body userId
+            respond response
       "createCategory" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -266,9 +254,9 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just userId -> do
-            answer <- createCategory conn body userId
-            LBSC.putStrLn answer
-            respond $ responseOk $ str `mappend` "\n" `mappend` answer
+            response <- createCategory conn body userId
+            LBSC.putStrLn response
+            respond $ responseOk $ str `mappend` "\n" `mappend` response
       _ -> respond $ responseNotFound "Unknown method called"
   | path == "" = respond $
               if query' /= ""

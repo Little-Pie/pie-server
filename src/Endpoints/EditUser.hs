@@ -8,14 +8,16 @@ import qualified Types.API.EditUser as API
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
 import Database.PostgreSQL.Simple
+import Network.Wai (Response)
+import Helpers
 
-editUser :: Connection -> LBS.ByteString -> Int -> IO (LBS.ByteString)
+editUser :: Connection -> LBS.ByteString -> Int -> IO (Response)
 editUser conn body authorizedUserId = case decode body :: Maybe API.EditUserRequest of
-  Nothing -> pure "Couldn't parse body"
+  Nothing -> pure $ responseBadRequest "Couldn't parse body"
   Just bodyParsed -> do
     userList <- DB.getUsers conn
     if authorizedUserId `notElem` (map userId userList)
-    then pure "There is no users with such id"
+    then pure $ responseBadRequest "There is no users with such id"
     else do
       user' <- DB.getUserById conn authorizedUserId
       let user = head user'
@@ -24,3 +26,4 @@ editUser conn body authorizedUserId = case decode body :: Maybe API.EditUserRequ
         login = maybe (login user) id (API.login bodyParsed),
         password = maybe (password user) id (API.password bodyParsed)}
       DB.editUser conn (name newUser) (login newUser) (password newUser) authorizedUserId
+      pure $ responseOk "Changes applied"
