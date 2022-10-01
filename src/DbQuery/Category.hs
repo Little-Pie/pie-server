@@ -6,8 +6,8 @@ import Types.Entities.Category
 import Database.PostgreSQL.Simple
 
 getCategoryById :: Connection -> Int -> IO [Category]
-getCategoryById conn id =
-  query conn "SELECT * FROM categories WHERE id=(?)" (Only id) :: IO [Category]
+getCategoryById conn categoryId =
+  query conn "SELECT * FROM categories WHERE id=(?)" (Only categoryId) :: IO [Category]
 
 getGeneralCategoryByName :: Connection -> String -> IO [Category]
 getGeneralCategoryByName conn name =

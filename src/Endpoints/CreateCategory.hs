@@ -2,6 +2,7 @@
 
 module Endpoints.CreateCategory where
 
+import DbQuery.User
 import DbQuery.Category
 import Types.Entities.User
 import Types.Entities.Category
@@ -16,7 +17,7 @@ createCategory conn body userId  = case decode body :: Maybe API.CreateCategoryR
   Just bodyParsed -> do
     let name' = API.name bodyParsed
     let mbParentCategoryId = API.parentCategoryId bodyParsed
-    admin <- query conn "select * from users where id=(?)" (Only userId) :: IO [User]
+    admin <- getUserById conn userId
     case admin of
       [] -> pure "Something went wrong: empty list"
       [x] -> case isAdmin x of

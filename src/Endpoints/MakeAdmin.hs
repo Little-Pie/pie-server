@@ -2,6 +2,7 @@
 
 module Endpoints.MakeAdmin where
 
+import qualified DbQuery.User as DB
 import qualified Types.API.Id as API
 import Types.Entities.User
 import qualified Data.ByteString.Lazy as LBS
@@ -12,12 +13,10 @@ makeAdmin :: Connection -> LBS.ByteString -> IO (LBS.ByteString)
 makeAdmin conn body = case decode body :: Maybe API.IdRequest of
   Nothing -> pure "Couldn't parse body"
   Just bodyParsed -> do
-    let id' = API.id bodyParsed
-    users <- query conn "select * from users where id=(?)" (Only id') :: IO [User]
+    let editUserId = API.id bodyParsed
+    users <- DB.getUserById conn editUserId
     case users of
       [] -> pure "There are no users with such id"
       [x] -> if isAdmin x
       then pure "This user is already admin"
-      else do
-        execute conn "UPDATE users SET \"isAdmin\" = (?) WHERE id = (?)" $ (True,id')
-        pure "Now this user is an admin"
+      else DB.makeAdmin conn editUserId

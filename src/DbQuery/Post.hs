@@ -2,6 +2,7 @@
 
 module DbQuery.Post where
 
+import Types.Entities.Post
 import qualified Data.ByteString.Char8 as BS
 import qualified Types.API.GetPosts as API
 import Types.Entities.Category
@@ -14,6 +15,24 @@ insertNewPost :: Connection -> String -> String -> Int -> Int -> IO (LBS.ByteStr
 insertNewPost conn title text categoryId userId = do
   execute conn "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") VALUES (?,?,?,?,?)" (title,text,userId,False,categoryId)
   pure "Post is created"
+
+editPost :: Connection -> String -> String -> Int -> Int -> IO (LBS.ByteString)
+editPost conn title text categoryId postId = do
+  execute conn "UPDATE posts SET (title,text,\"categoryId\") = (?,?,?) WHERE id = (?)" (title, text, categoryId, postId)
+  pure "Changes applied"
+
+publishPost :: Connection -> Int -> IO (LBS.ByteString)
+publishPost conn postId = do
+  execute conn "UPDATE posts SET \"isPublished\" = (?) WHERE id = (?)" $ (True,postId)
+  pure "Post is published"
+
+deletePost :: Connection -> Int ->  IO (LBS.ByteString)
+deletePost conn postId = do
+  execute conn "DELETE FROM posts WHERE id=(?)" $ (Only postId)
+  pure "Post is deleted"
+
+getPostById :: Connection -> Int -> IO [Post]
+getPostById conn postId = query conn "select * from posts where id=(?)" $ (Only postId)
 
 initQuery = "SELECT posts.*,users.name,categories.name FROM posts JOIN users ON \"posts.authorId\" = users.id JOIN categories ON \"posts.categoryId\" = categories.id WHERE \"isPublished\" = true"
 

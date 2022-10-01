@@ -2,6 +2,7 @@
 
 module Endpoints.MakeAuthor where
 
+import qualified DbQuery.User as DB
 import qualified Types.API.Id as API
 import Types.Entities.User
 import qualified Data.ByteString.Lazy as LBS
@@ -12,12 +13,10 @@ makeAuthor :: Connection -> LBS.ByteString -> IO (LBS.ByteString)
 makeAuthor conn body = case decode body :: Maybe API.IdRequest of
   Nothing -> pure "Couldn't parse body"
   Just bodyParsed -> do
-    let id' = API.id bodyParsed
-    users <- query conn "select * from users where id=(?)" (Only id') :: IO [User]
+    let editUserId = API.id bodyParsed
+    users <- DB.getUserById conn editUserId
     case users of
       [] -> pure "There are no users with such id"
       [x] -> if isAuthor x
       then pure "This user is already author"
-      else do
-        execute conn "UPDATE users SET \"isAuthor\" = (?) WHERE id = (?)" $ (True,id')
-        pure "Now this user is an author"
+      else DB.makeAuthor conn editUserId

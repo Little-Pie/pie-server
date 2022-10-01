@@ -2,6 +2,7 @@
 
 module Endpoints.CreateUser where
 
+import DbQuery.User
 import qualified Types.API.CreateUser as CreateUser
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
@@ -15,5 +16,4 @@ createUser conn body = case decode body :: Maybe CreateUser.CreateUserRequest of
     let name' = CreateUser.name bodyParsed
     let login' = CreateUser.login bodyParsed
     let password' = CreateUser.password bodyParsed
-    execute conn "INSERT INTO users (name,login,password,\"isAdmin\",\"isAuthor\") VALUES (?,?,?,?,?)" (name',login',password',False,False)
-    pure "User is created"
+    insertNewUser conn name' login' password'

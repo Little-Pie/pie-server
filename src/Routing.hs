@@ -2,9 +2,9 @@
 
 module Routing where
 
-import DbQuery.User
-import DbQuery.Post
-import DbQuery.Category
+import qualified DbQuery.User as DBU
+import qualified DbQuery.Post as DBP
+import qualified DbQuery.Category as DBC
 import Helpers
 import Types.Entities.Post
 import Types.Entities.User
@@ -277,7 +277,7 @@ application conn config req respond
     let cfgLimit = limit config
     let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
     let offset' = fromMaybe (offset config) mbOffset
-    posts <- showPosts conn limit' offset' queryFilters mbQuerySortBy
+    posts <- DBP.showPosts conn limit' offset' queryFilters mbQuerySortBy
     respond $ responseOk $ encodePretty posts
   | otherwise = respond $ responseNotFound "Unknown method called"
 
