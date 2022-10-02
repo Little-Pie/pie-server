@@ -57,7 +57,7 @@ application conn config req respond
         response <- getCategoryById conn body
         respond response
       "editUser" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
@@ -68,7 +68,7 @@ application conn config req respond
                     admin <- DBU.getUserById conn id
                     case admin of
                       [] -> respond $ responseInternalError "Something went wrong: empty list"
-                      _ -> case isAdmin $ head admin of
+                      (x:_) -> case isAdmin x of
                         True -> do
                           case readMaybe (BS.unpack userId) :: Maybe Int of
                             Nothing -> respond $ responseBadRequest "User id should be a number"
@@ -80,7 +80,7 @@ application conn config req respond
                     response <- editUser conn body id
                     respond response
       "createPost" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
@@ -93,7 +93,7 @@ application conn config req respond
                 response <- createPost conn body id
                 respond response 
       "editPost" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
@@ -105,7 +105,7 @@ application conn config req respond
                 admin <- DBU.getUserById conn id
                 case admin of
                   [] -> respond $ responseInternalError "Something went wrong: empty list"
-                  _ -> case isAdmin $ head admin of
+                  (x:_) -> case isAdmin x of
                     True -> case readMaybe (BS.unpack postId) :: Maybe Int of
                       Nothing -> respond $ responseBadRequest "Post id should be a number"
                       Just userId' -> do
@@ -125,73 +125,79 @@ application conn config req respond
                                 response <- editPost conn body postId'
                                 respond response
       "makeAuthor" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
             admin <- DBU.getUserById conn id
-            case isAdmin $ head admin of
-              False -> respond $ responseNotFound ""
-              True -> do
-                if query' == ""
-                then respond $ responseBadRequest "Enter user id"
-                else do
-                  case lookup' "id" queryItems of
-                    Nothing -> respond $ responseBadRequest "Enter user id"
-                    Just userId -> do
-                      case readMaybe (BS.unpack userId) :: Maybe Int of
-                        Nothing -> respond $ responseBadRequest "User id should be a number"
-                        Just userId' -> do
-                          response <- makeAuthor conn body
-                          respond response
+            case admin of
+              [] -> respond $ responseInternalError "Something went wrong: empty list"
+              (x:_) -> if isAdmin x
+                then do
+                  if query' == ""
+                  then respond $ responseBadRequest "Enter user id"
+                  else do
+                    case lookup' "id" queryItems of
+                      Nothing -> respond $ responseBadRequest "Enter user id"
+                      Just userId -> do
+                        case readMaybe (BS.unpack userId) :: Maybe Int of
+                          Nothing -> respond $ responseBadRequest "User id should be a number"
+                          Just userId' -> do
+                            response <- makeAuthor conn body
+                            respond response
+                else respond $ responseNotFound ""
       "removeAuthor" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
             admin <- DBU.getUserById conn id
-            case isAdmin $ head admin of
-              False -> respond $ responseNotFound ""
-              True -> do
-                if query' == ""
-                then respond $ responseBadRequest "Enter user id"
-                else do
-                  case lookup' "id" queryItems of
-                    Nothing -> respond $ responseBadRequest "Enter user id"
-                    Just userId -> do
-                      case readMaybe (BS.unpack userId) :: Maybe Int of
-                        Nothing -> respond $ responseBadRequest "User id should be a number"
-                        Just userId' -> do
-                          response <- removeAuthor conn body
-                          respond response
+            case admin of
+              [] -> respond $ responseInternalError "Something went wrong: empty list"
+              (x:_) -> if isAdmin x
+                then do
+                  if query' == ""
+                  then respond $ responseBadRequest "Enter user id"
+                  else do
+                    case lookup' "id" queryItems of
+                      Nothing -> respond $ responseBadRequest "Enter user id"
+                      Just userId -> do
+                        case readMaybe (BS.unpack userId) :: Maybe Int of
+                          Nothing -> respond $ responseBadRequest "User id should be a number"
+                          Just userId' -> do
+                            response <- removeAuthor conn body
+                            respond response
+                else respond $ responseNotFound ""
       "makeAdmin" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just id -> do
             admin <- DBU.getUserById conn id
-            case isAdmin $ head admin of
-              False -> respond $ responseNotFound ""
-              True -> do
-                if query' == ""
-                then respond $ responseBadRequest "Enter user id"
-                else do
-                  case lookup' "id" queryItems of
-                    Nothing -> respond $ responseBadRequest "Enter user id"
-                    Just userId -> do
-                      case readMaybe (BS.unpack userId) :: Maybe Int of
-                        Nothing -> respond $ responseBadRequest "User id should be a number"
-                        Just userId' -> do
-                          response <- makeAdmin conn body
-                          respond response
+            case admin of
+              [] ->  respond $ responseInternalError "Something went wrong: empty list"
+              (x:_) -> if isAdmin x
+                then do
+                  if query' == ""
+                  then respond $ responseBadRequest "Enter user id"
+                  else do
+                    case lookup' "id" queryItems of
+                      Nothing -> respond $ responseBadRequest "Enter user id"
+                      Just userId -> do
+                        case readMaybe (BS.unpack userId) :: Maybe Int of
+                          Nothing -> respond $ responseBadRequest "User id should be a number"
+                          Just userId' -> do
+                            response <- makeAdmin conn body
+                            respond response
+                else respond $ responseNotFound ""
       "removeAdmin" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
@@ -215,7 +221,7 @@ application conn config req respond
                             respond response
                 else respond $ responseNotFound ""
       "publishPost" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
@@ -224,7 +230,7 @@ application conn config req respond
             response <- publishPost conn body userId
             respond response
       "deletePost" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
@@ -233,7 +239,7 @@ application conn config req respond
             response <- deletePost conn body userId
             respond response
       "deleteUser" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
@@ -242,7 +248,7 @@ application conn config req respond
             response <- deleteUser conn body userId
             respond response
       "createCategory" -> do
-        (str, mbId) <- authorize conn base64LoginAndPassword
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
@@ -256,11 +262,18 @@ application conn config req respond
                    response <- createCategory conn body userId
                    respond response
                 else respond $ responseNotFound ""
-      _ -> respond $ responseNotFound "Unknown method called"
+      _ -> respond $ responseNotFound ""
   | path == "" = respond $
               if query' /= ""
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi GET!"
+  | path == "categories" = do
+    let (mbLimit, mbOffset) = (join $ readMaybe . BS.unpack <$> lookup' "limit" queryItems :: Maybe Int, join $ readMaybe . BS.unpack <$> lookup' "offset" queryItems :: Maybe Int)
+    let cfgLimit = limit config
+    let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
+    let offset' = fromMaybe (offset config) mbOffset
+    categories <- DBC.showCategories conn limit' offset'
+    respond $ responseOk $ encodePretty categories
   | path == "users" = do
     let (mbLimit, mbOffset) = (join $ readMaybe . BS.unpack <$> lookup' "limit" queryItems :: Maybe Int, join $ readMaybe . BS.unpack <$> lookup' "offset" queryItems :: Maybe Int)
     let cfgLimit = limit config
@@ -277,11 +290,18 @@ application conn config req respond
     let offset' = fromMaybe (offset config) mbOffset
     posts <- DBP.showPosts conn limit' offset' queryFilters mbQuerySortBy
     respond $ responseOk $ encodePretty posts
-  | otherwise = respond $ responseNotFound "Unknown method called"
+  | otherwise = respond $ responseNotFound ""
 
   where queryItems = queryString req
         query' = rawQueryString req
         path = BS.tail $ rawPathInfo req
         bodyIO = lazyRequestBody req
         headers = requestHeaders req
-        base64LoginAndPassword = snd $ head $ filter (\x -> fst x == "Authorization") headers
+        mbBase64LoginAndPassword = getBase64LoginAndPassword headers
+
+        getBase64LoginAndPassword :: RequestHeaders -> Maybe BS.ByteString
+        getBase64LoginAndPassword headers = case headers of
+          [] -> Nothing
+          ((headerName,bStr):xs) -> if headerName == "Authorization"
+            then Just bStr
+            else getBase64LoginAndPassword xs

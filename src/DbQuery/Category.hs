@@ -26,3 +26,6 @@ insertNewCategory :: Connection -> String -> Int -> IO ()
 insertNewCategory conn name parentCategoryId = do
   execute conn "INSERT INTO categories (name,\"parentId\") VALUES (?,?)" (name,parentCategoryId)
   pure ()
+
+showCategories :: Connection -> Int -> Int -> IO [Category]
+showCategories conn limit offset = query conn "select * from categories limit (?) offset (?)" (limit, offset)

@@ -35,19 +35,21 @@ localPG = defaultConnectInfo
         , connectPassword = "5368"
         }
 
-authorize :: Connection -> BS.ByteString -> IO (LBS.ByteString,Maybe Int)
-authorize conn base64LoginAndPassword = case BASE.decode base64LoginAndPassword of
-  Left err -> pure (LBSC.pack err,Nothing)
-  Right loginPassword -> do
-    let login' = BS.takeWhile (/= ':') loginPassword
-    users <- query conn "select * from users where login=(?)" (Only $ BS.unpack login') :: IO [User]
-    case users of
-      [] -> pure ("Wrong login",Nothing)
-      [us] -> do
-        let loginPassword' = BS.pack $ login us ++ ":" ++ password us
-        if loginPassword == loginPassword'
-        then pure ("User is authorized",Just (userId us))
-        else pure ("Wrong password",Nothing)
+authorize :: Connection -> Maybe BS.ByteString -> IO (LBS.ByteString,Maybe Int)
+authorize conn mbBase64LoginAndPassword = case mbBase64LoginAndPassword of
+  Nothing -> pure ("Found no header for Authorization",Nothing)
+  Just base64LoginAndPassword -> case BASE.decode base64LoginAndPassword of
+    Left err -> pure (LBSC.pack err,Nothing)
+    Right loginPassword -> do
+      let login' = BS.takeWhile (/= ':') loginPassword
+      users <- query conn "select * from users where login=(?)" (Only $ BS.unpack login') :: IO [User]
+      case users of
+        [] -> pure ("Wrong login",Nothing)
+        [us] -> do
+          let loginPassword' = BS.pack $ login us ++ ":" ++ password us
+          if loginPassword == loginPassword'
+          then pure ("User is authorized",Just (userId us))
+          else pure ("Wrong password",Nothing)
 
 getQueryFilters :: [(BS.ByteString, Maybe BS.ByteString)] -> [(BS.ByteString, BS.ByteString)]
 getQueryFilters queryItems = foldl (\acc n -> case lookup' n queryItems of
