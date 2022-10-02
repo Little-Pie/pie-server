@@ -10,18 +10,20 @@ import qualified Types.API.CreateCategory as API
 import qualified Data.ByteString.Lazy as LBS
 import Database.PostgreSQL.Simple
 import Data.Aeson
+import Helpers
+import Network.Wai (Response)
 
-createCategory :: Connection -> LBS.ByteString -> Int -> IO LBS.ByteString
+createCategory :: Connection -> LBS.ByteString -> Int -> IO Response
 createCategory conn body userId  = case decode body :: Maybe API.CreateCategoryRequest of
-  Nothing -> pure "Couldn't parse body"
+  Nothing -> pure $ responseBadRequest "Couldn't parse body"
   Just bodyParsed -> do
     let name' = API.name bodyParsed
     let mbParentCategoryId = API.parentCategoryId bodyParsed
     admin <- getUserById conn userId
     case admin of
-      [] -> pure "Something went wrong: empty list"
+      [] -> pure $ responseInternalError "Something went wrong: empty list"
       [x] -> case isAdmin x of
-        False -> pure "You can not create categories"
+        False -> pure $ responseNotFound ""
         True -> do
           case mbParentCategoryId of
             Nothing -> do
@@ -29,12 +31,12 @@ createCategory conn body userId  = case decode body :: Maybe API.CreateCategoryR
               case categories of
                 [] -> do
                   insertNewGeneralCategory conn name'
-                  pure "Category is created"
-                categories' -> pure "This category already exists"
+                  pure $ responseOk "Category is created"
+                categories' -> pure $ responseBadRequest "This category already exists"
             Just parentCategoryId' -> do
               categories <- getCategoryByNameAndParent conn name' parentCategoryId'
               case categories of
                 [] -> do
                   insertNewCategory conn name' parentCategoryId'
-                  pure "Category is created"
-                categories' -> pure "This category already exists"
+                  pure $ responseOk "Category is created"
+                categories' -> pure $ responseBadRequest "This category already exists"

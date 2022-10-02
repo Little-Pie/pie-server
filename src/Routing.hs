@@ -90,10 +90,8 @@ application conn config req respond
             case isAuthor $ head author of
               False -> respond $ responseNotFound "You can not post news"
               True -> do
-                putStrLn $ LBSC.unpack body
                 response <- createPost conn body id
-                LBSC.putStrLn response
-                respond $ responseOk response 
+                respond response 
       "editPost" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -112,10 +110,7 @@ application conn config req respond
                       Nothing -> respond $ responseBadRequest "Post id should be a number"
                       Just userId' -> do
                         response <- editPost conn body userId'
-                        LBSC.putStrLn str
-                        putStrLn $ LBSC.unpack body
-                        LBSC.putStrLn response
-                        respond $ responseOk $ str `mappend` "\n" `mappend` response
+                        respond response
                     False -> case lookup' "id" queryItems of
                       Nothing -> respond $ responseBadRequest "Enter post id"
                       Just postId -> case readMaybe (BS.unpack postId) :: Maybe Int of
@@ -128,8 +123,7 @@ application conn config req respond
                               False -> respond $ responseNotFound "You're not able to edit this post"
                               True -> do
                                 response <- editPost conn body postId'
-                                LBSC.putStrLn response
-                                respond $ responseOk $ str `mappend` "\n" `mappend` response
+                                respond response
       "makeAuthor" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -139,7 +133,7 @@ application conn config req respond
           Just id -> do
             admin <- DBU.getUserById conn id
             case isAdmin $ head admin of
-              False -> respond $ responseNotFound "You can not make authors"
+              False -> respond $ responseNotFound ""
               True -> do
                 if query' == ""
                 then respond $ responseBadRequest "Enter user id"
@@ -161,7 +155,7 @@ application conn config req respond
           Just id -> do
             admin <- DBU.getUserById conn id
             case isAdmin $ head admin of
-              False -> respond $ responseNotFound "You can not remove authors"
+              False -> respond $ responseNotFound ""
               True -> do
                 if query' == ""
                 then respond $ responseBadRequest "Enter user id"
@@ -183,7 +177,7 @@ application conn config req respond
           Just id -> do
             admin <- DBU.getUserById conn id
             case isAdmin $ head admin of
-              False -> respond $ responseNotFound "You can not make admins"
+              False -> respond $ responseNotFound ""
               True -> do
                 if query' == ""
                 then respond $ responseBadRequest "Enter user id"
@@ -204,20 +198,22 @@ application conn config req respond
             respond $ responseUnauthorized str
           Just id -> do
             admin <- DBU.getUserById conn id
-            case isAdmin $ head admin of
-              False -> respond $ responseNotFound "You can not remove admins"
-              True -> do
-                if query' == ""
-                then respond $ responseBadRequest "Enter user id"
-                else do
-                  case lookup' "id" queryItems of
-                    Nothing -> respond $ responseBadRequest "Enter user id"
-                    Just userId -> do
-                      case readMaybe (BS.unpack userId) :: Maybe Int of
-                        Nothing -> respond $ responseBadRequest "User id should be a number"
-                        Just userId' -> do
-                          response <- removeAdmin conn body
-                          respond response
+            case admin of
+              [] -> respond $ responseInternalError "Something went wrong: empty list"
+              (x:_) -> if isAdmin x
+                then do
+                  if query' == ""
+                  then respond $ responseBadRequest "Enter user id"
+                  else do
+                    case lookup' "id" queryItems of
+                      Nothing -> respond $ responseBadRequest "Enter user id"
+                      Just userId -> do
+                        case readMaybe (BS.unpack userId) :: Maybe Int of
+                          Nothing -> respond $ responseBadRequest "User id should be a number"
+                          Just userId' -> do
+                            response <- removeAdmin conn body
+                            respond response
+                else respond $ responseNotFound ""
       "publishPost" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -226,8 +222,7 @@ application conn config req respond
             respond $ responseUnauthorized str
           Just userId -> do
             response <- publishPost conn body userId
-            LBSC.putStrLn response
-            respond $ responseOk response
+            respond response
       "deletePost" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -236,8 +231,7 @@ application conn config req respond
             respond $ responseUnauthorized str
           Just userId -> do
             response <- deletePost conn body userId
-            LBSC.putStrLn response
-            respond $ responseOk $ str `mappend` "\n" `mappend` response
+            respond response
       "deleteUser" -> do
         (str, mbId) <- authorize conn base64LoginAndPassword
         case mbId of
@@ -254,9 +248,14 @@ application conn config req respond
             LBSC.putStrLn str
             respond $ responseUnauthorized str
           Just userId -> do
-            response <- createCategory conn body userId
-            LBSC.putStrLn response
-            respond $ responseOk $ str `mappend` "\n" `mappend` response
+            admin <- DBU.getUserById conn userId
+            case admin of
+              [] -> respond $ responseInternalError "Something went wrong: empty list"
+              (x:_) -> if isAdmin x
+                then do
+                   response <- createCategory conn body userId
+                   respond response
+                else respond $ responseNotFound ""
       _ -> respond $ responseNotFound "Unknown method called"
   | path == "" = respond $
               if query' /= ""

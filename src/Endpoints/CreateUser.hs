@@ -7,7 +7,6 @@ import qualified Types.API.CreateUser as CreateUser
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
 import Network.Wai (Response)
-import Network.HTTP.Types (Query)
 import Database.PostgreSQL.Simple
 import Helpers
 

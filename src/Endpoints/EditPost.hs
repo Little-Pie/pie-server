@@ -10,10 +10,12 @@ import Types.Entities.Post
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
 import Database.PostgreSQL.Simple
+import Helpers
+import Network.Wai (Response)
 
-editPost :: Connection -> LBS.ByteString -> Int -> IO (LBS.ByteString)
+editPost :: Connection -> LBS.ByteString -> Int -> IO Response
 editPost conn body postId' = case decode body :: Maybe API.EditPostRequest of
-  Nothing -> pure "Couldn't parse body"
+  Nothing -> pure $ responseBadRequest "Couldn't parse body"
   Just bodyParsed -> do
     checkedCategoryId <-
       case API.categoryId bodyParsed of
@@ -25,10 +27,11 @@ editPost conn body postId' = case decode body :: Maybe API.EditPostRequest of
         Nothing -> pure Nothing
     posts <- DBP.getPostById conn postId'
     case posts of
-      [] -> pure "There are no posts with such id"
+      [] -> pure $ responseBadRequest "There are no posts with such id"
       (x:_) -> do
         let newPost = x {
           title = maybe (title x) Prelude.id (API.title bodyParsed),
           text = maybe (text x) Prelude.id (API.text bodyParsed),
           categoryId = maybe (categoryId x) Prelude.id (checkedCategoryId)}
         DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (postId')
+        pure $ responseOk "Changes applied"
