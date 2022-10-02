@@ -15,6 +15,7 @@ import Endpoints.CreateCategory
 import Endpoints.DeleteUser
 import Endpoints.DeletePost
 import Endpoints.EditPost
+import Endpoints.EditCategory
 import Endpoints.RemoveAdmin
 import Endpoints.RemoveAuthor
 import Endpoints.MakeAdmin
@@ -260,6 +261,21 @@ application conn config req respond
               (x:_) -> if isAdmin x
                 then do
                    response <- createCategory conn body userId
+                   respond response
+                else respond $ responseNotFound ""
+      "editCategory" -> do
+        (str, mbId) <- authorize conn mbBase64LoginAndPassword
+        case mbId of
+          Nothing -> do
+            LBSC.putStrLn str
+            respond $ responseUnauthorized str
+          Just userId -> do
+            admin <- DBU.getUserById conn userId
+            case admin of
+              [] -> respond $ responseInternalError "Something went wrong: empty list"
+              (x:_) -> if isAdmin x
+                then do
+                   response <- editCategory conn body
                    respond response
                 else respond $ responseNotFound ""
       _ -> respond $ responseNotFound ""

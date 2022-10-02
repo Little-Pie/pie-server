@@ -33,6 +33,7 @@ library
       Endpoints.CreateUser
       Endpoints.DeletePost
       Endpoints.DeleteUser
+      Endpoints.EditCategory
       Endpoints.EditPost
       Endpoints.EditUser
       Endpoints.GetCategoryById
@@ -48,6 +49,7 @@ library
       Types.API.CreateCategory
       Types.API.CreatePost
       Types.API.CreateUser
+      Types.API.EditCategory
       Types.API.EditPost
       Types.API.EditUser
       Types.API.GetPosts

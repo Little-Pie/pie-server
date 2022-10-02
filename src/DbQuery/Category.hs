@@ -29,3 +29,8 @@ insertNewCategory conn name parentCategoryId = do
 
 showCategories :: Connection -> Int -> Int -> IO [Category]
 showCategories conn limit offset = query conn "select * from categories limit (?) offset (?)" (limit, offset)
+
+editCategory :: Connection -> String -> Maybe Int -> Int -> IO ()
+editCategory conn name parentCategoryId categoryId = do
+  execute conn "UPDATE categories SET (name,\"parentId\") = (?,?) WHERE id = (?)" (name,parentCategoryId,categoryId)
+  pure ()
