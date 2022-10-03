@@ -63,23 +63,9 @@ application conn config req respond
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
-          Just id -> do
-                case lookup' "id" queryItems of
-                  Just userId -> do
-                    admin <- DBU.getUserById conn id
-                    case admin of
-                      [] -> respond $ responseInternalError "Something went wrong: empty list"
-                      (x:_) -> case isAdmin x of
-                        True -> do
-                          case readMaybe (BS.unpack userId) :: Maybe Int of
-                            Nothing -> respond $ responseBadRequest "User id should be a number"
-                            Just userId' -> do
-                              response <- editUser conn body userId'
-                              respond response
-                        False -> respond $ responseBadRequest "Only admin can edit other users"
-                  Nothing -> do
-                    response <- editUser conn body id
-                    respond response
+          Just userId -> do
+            response <- editUser conn body userId
+            respond response
       "createPost" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
