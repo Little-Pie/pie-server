@@ -8,22 +8,11 @@ import qualified DbQuery.Category as DBC
 import Helpers
 import Types.Entities.Post
 import Types.Entities.User
-import Endpoints.GetPostById
-import Endpoints.GetUserById
-import Endpoints.GetCategoryById
 import Endpoints.CreateCategory
-import Endpoints.DeleteUser
-import Endpoints.DeletePost
 import Endpoints.EditPost
 import Endpoints.EditCategory
-import Endpoints.RemoveAdmin
-import Endpoints.RemoveAuthor
-import Endpoints.MakeAdmin
-import Endpoints.MakeAuthor
 import Endpoints.CreateUser
-import Endpoints.EditUser
 import Endpoints.CreatePost
-import Endpoints.PublishPost
 import Control.Monad
 import Data.Maybe (fromMaybe)
 import Text.Read (readMaybe)
@@ -46,25 +35,13 @@ application conn config req respond
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi POST!"
       "createUser" -> do
-        response <- createUser conn body
-        respond response
-      "userById" -> do
-        response <- getUserById conn body
-        respond response
-      "postById" -> do
-        response <- getPostById conn body
-        respond response
-      "categoryById" -> do
-        response <- getCategoryById conn body
-        respond response
-      "editUser" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
-          Just userId -> do
-            response <- editUser conn body userId
+          Just authorizedUserId -> do
+            response <- createUser conn body authorizedUserId
             respond response
       "createPost" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
@@ -72,8 +49,8 @@ application conn config req respond
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
-          Just userId -> do
-            response <- createPost conn body userId
+          Just authorizedUserId -> do
+            response <- createPost conn body authorizedUserId
             respond response 
       "editPost" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
@@ -84,123 +61,24 @@ application conn config req respond
           Just authorizedUserId -> do
             response <- editPost conn body authorizedUserId
             respond response
-      "makeAuthor" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just id -> do
-            admin <- DBU.getUserById conn id
-            case admin of
-              [] -> respond $ responseInternalError "Something went wrong: empty list"
-              (x:_) -> if isAdmin x
-                then do
-                  response <- makeAuthor conn body
-                  respond response
-                else respond $ responseNotFound ""
-      "removeAuthor" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just id -> do
-            admin <- DBU.getUserById conn id
-            case admin of
-              [] -> respond $ responseInternalError "Something went wrong: empty list"
-              (x:_) -> if isAdmin x
-                then do
-                  response <- removeAuthor conn body
-                  respond response
-                else respond $ responseNotFound ""
-      "makeAdmin" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just id -> do
-            admin <- DBU.getUserById conn id
-            case admin of
-              [] ->  respond $ responseInternalError "Something went wrong: empty list"
-              (x:_) -> if isAdmin x
-                then do
-                  response <- makeAdmin conn body
-                  respond response
-                else respond $ responseNotFound ""
-      "removeAdmin" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just id -> do
-            admin <- DBU.getUserById conn id
-            case admin of
-              [] -> respond $ responseInternalError "Something went wrong: empty list"
-              (x:_) -> if isAdmin x
-                then do
-                  response <- removeAdmin conn body
-                  respond response
-                else respond $ responseNotFound ""
-      "publishPost" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just userId -> do
-            response <- publishPost conn body userId
-            respond response
-      "deletePost" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just userId -> do
-            response <- deletePost conn body userId
-            respond response
-      "deleteUser" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just userId -> do
-            response <- deleteUser conn body userId
-            respond response
       "createCategory" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
-          Just userId -> do
-            admin <- DBU.getUserById conn userId
-            case admin of
-              [] -> respond $ responseInternalError "Something went wrong: empty list"
-              (x:_) -> if isAdmin x
-                then do
-                   response <- createCategory conn body userId
-                   respond response
-                else respond $ responseNotFound ""
+          Just authorizedUserId -> do
+            response <- createCategory conn body authorizedUserId
+            respond response
       "editCategory" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
-          Just userId -> do
-            admin <- DBU.getUserById conn userId
-            case admin of
-              [] -> respond $ responseInternalError "Something went wrong: empty list"
-              (x:_) -> if isAdmin x
-                then do
-                   response <- editCategory conn body
-                   respond response
-                else respond $ responseNotFound ""
+          Just authorizedUserId -> do
+            response <- editCategory conn body authorizedUserId
+            respond response
       _ -> respond $ responseNotFound ""
   | path == "" = respond $
               if query' /= ""

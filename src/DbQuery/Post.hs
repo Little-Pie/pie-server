@@ -11,25 +11,15 @@ import qualified Data.ByteString.Lazy as LBS
 import Database.PostgreSQL.Simple.Types (Query(..))
 import Data.Maybe (fromMaybe)
 
-insertNewPost :: Connection -> String -> String -> Int -> Int -> IO (LBS.ByteString)
-insertNewPost conn title text categoryId userId = do
-  execute conn "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") VALUES (?,?,?,?,?)" (title,text,userId,False,categoryId)
+insertNewPost :: Connection -> String -> String -> Int -> Int -> Bool -> IO (LBS.ByteString)
+insertNewPost conn title text categoryId userId isPublished = do
+  execute conn "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") VALUES (?,?,?,?,?)" (title,text,userId,isPublished,categoryId)
   pure "Post is created"
 
-editPost :: Connection -> String -> String -> Int -> Int -> IO (LBS.ByteString)
-editPost conn title text categoryId postId = do
-  execute conn "UPDATE posts SET (title,text,\"categoryId\") = (?,?,?) WHERE id = (?)" (title, text, categoryId, postId)
+editPost :: Connection -> String -> String -> Int -> Int -> Bool -> IO (LBS.ByteString)
+editPost conn title text categoryId postId isPublished = do
+  execute conn "UPDATE posts SET (title,text,\"isPublished\",\"categoryId\") = (?,?,?) WHERE id = (?)" (title, text, isPublished, categoryId, postId)
   pure "Changes applied"
-
-publishPost :: Connection -> Int -> IO (LBS.ByteString)
-publishPost conn postId = do
-  execute conn "UPDATE posts SET \"isPublished\" = (?) WHERE id = (?)" $ (True,postId)
-  pure "Post is published"
-
-deletePost :: Connection -> Int ->  IO (LBS.ByteString)
-deletePost conn postId = do
-  execute conn "DELETE FROM posts WHERE id=(?)" $ (Only postId)
-  pure "Post is deleted"
 
 getPostById :: Connection -> Int -> IO [Post]
 getPostById conn postId = query conn "select * from posts where id=(?)" $ (Only postId)

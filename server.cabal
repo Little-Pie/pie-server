@@ -31,19 +31,8 @@ library
       Endpoints.CreateCategory
       Endpoints.CreatePost
       Endpoints.CreateUser
-      Endpoints.DeletePost
-      Endpoints.DeleteUser
       Endpoints.EditCategory
       Endpoints.EditPost
-      Endpoints.EditUser
-      Endpoints.GetCategoryById
-      Endpoints.GetPostById
-      Endpoints.GetUserById
-      Endpoints.MakeAdmin
-      Endpoints.MakeAuthor
-      Endpoints.PublishPost
-      Endpoints.RemoveAdmin
-      Endpoints.RemoveAuthor
       Helpers
       Routing
       Types.API.CreateCategory
@@ -51,9 +40,7 @@ library
       Types.API.CreateUser
       Types.API.EditCategory
       Types.API.EditPost
-      Types.API.EditUser
       Types.API.GetPosts
-      Types.API.Id
       Types.Entities.Category
       Types.Entities.Post
       Types.Entities.User

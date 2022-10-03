@@ -22,9 +22,8 @@ createCategory conn body userId  = case decode body :: Maybe API.CreateCategoryR
     admin <- getUserById conn userId
     case admin of
       [] -> pure $ responseInternalError "Something went wrong: empty list"
-      [x] -> case isAdmin x of
-        False -> pure $ responseNotFound ""
-        True -> do
+      (x:_) -> if isAdmin x
+        then do
           case mbParentCategoryId of
             Nothing -> do
               categories <- getGeneralCategoryByName conn name'
@@ -40,3 +39,4 @@ createCategory conn body userId  = case decode body :: Maybe API.CreateCategoryR
                   insertNewCategory conn name' parentCategoryId'
                   pure $ responseOk "Category is created"
                 categories' -> pure $ responseBadRequest "This category already exists"
+        else pure $ responseNotFound ""

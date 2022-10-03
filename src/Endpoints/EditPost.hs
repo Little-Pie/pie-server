@@ -40,8 +40,9 @@ editPost conn body authorizedUserId = case decode body :: Maybe API.EditPostRequ
               let newPost = post {
                 title = maybe (title post) Prelude.id (API.title bodyParsed),
                 text = maybe (text post) Prelude.id (API.text bodyParsed),
-                categoryId = maybe (categoryId post) Prelude.id (checkedCategoryId)}
-              DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (editPostId)
+                categoryId = maybe (categoryId post) Prelude.id (checkedCategoryId),
+                isPublished = maybe (isPublished post) Prelude.id (API.isPublished bodyParsed)}
+              DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (editPostId) (isPublished newPost)
               pure $ responseOk "Changes applied"
             else do
               if authorizedUserId == authorId post
@@ -49,7 +50,8 @@ editPost conn body authorizedUserId = case decode body :: Maybe API.EditPostRequ
                   let newPost = post {
                     title = maybe (title post) Prelude.id (API.title bodyParsed),
                     text = maybe (text post) Prelude.id (API.text bodyParsed),
-                    categoryId = maybe (categoryId post) Prelude.id (checkedCategoryId)}
-                  DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (editPostId)
+                    categoryId = maybe (categoryId post) Prelude.id (checkedCategoryId),
+                    isPublished = maybe (isPublished post) Prelude.id (API.isPublished bodyParsed)}
+                  DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (editPostId) (isPublished newPost)
                   pure $ responseOk "Changes applied"
                 else pure $ responseNotFound ""

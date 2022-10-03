@@ -7,9 +7,11 @@ import Data.Aeson
 data CreatePostRequest = CreatePostRequest {title :: String
                                            ,text :: String
                                            ,categoryId :: Int
+                                           ,isPublished :: Bool
                                            }
 
 instance FromJSON CreatePostRequest where
   parseJSON (Object createPostRequest) = CreatePostRequest <$> createPostRequest .: "title"
                                                            <*> createPostRequest .: "text"
                                                            <*> createPostRequest .: "categoryId"
+                                                           <*> createPostRequest .: "isPublished"

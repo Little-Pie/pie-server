@@ -8,6 +8,7 @@ data EditPostRequest = EditPostRequest {postId :: Int
                                        ,title :: Maybe String
                                        ,text :: Maybe String
                                        ,categoryId :: Maybe Int
+                                       ,isPublished :: Maybe Bool
                                        }
 
 instance FromJSON EditPostRequest where
@@ -15,3 +16,4 @@ instance FromJSON EditPostRequest where
                                                        <*> editPostRequest .:? "title"
                                                        <*> editPostRequest .:? "text"
                                                        <*> editPostRequest .:? "categoryId"
+                                                       <*> editPostRequest .:? "isPublished"
