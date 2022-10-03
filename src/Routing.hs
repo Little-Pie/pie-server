@@ -72,13 +72,9 @@ application conn config req respond
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
-          Just id -> do
-            author <- DBU.getUserById conn id
-            case isAuthor $ head author of
-              False -> respond $ responseNotFound "You can not post news"
-              True -> do
-                response <- createPost conn body id
-                respond response 
+          Just userId -> do
+            response <- createPost conn body userId
+            respond response 
       "editPost" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
