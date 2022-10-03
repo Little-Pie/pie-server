@@ -85,32 +85,9 @@ application conn config req respond
           Nothing -> do
             LBSC.putStrLn str
             respond $ responseUnauthorized str
-          Just id -> do
-            case lookup' "id" queryItems of
-              Nothing -> respond $ responseBadRequest "Enter post id"
-              Just postId -> do
-                admin <- DBU.getUserById conn id
-                case admin of
-                  [] -> respond $ responseInternalError "Something went wrong: empty list"
-                  (x:_) -> case isAdmin x of
-                    True -> case readMaybe (BS.unpack postId) :: Maybe Int of
-                      Nothing -> respond $ responseBadRequest "Post id should be a number"
-                      Just userId' -> do
-                        response <- editPost conn body userId'
-                        respond response
-                    False -> case lookup' "id" queryItems of
-                      Nothing -> respond $ responseBadRequest "Enter post id"
-                      Just postId -> case readMaybe (BS.unpack postId) :: Maybe Int of
-                        Nothing -> respond $ responseBadRequest "Post id should be a number"
-                        Just postId' -> do
-                          post <- DBP.getPostById conn postId'
-                          case post of
-                            [] -> respond $ responseInternalError "Something went wrong: empty list"
-                            [x] -> case id == authorId x of
-                              False -> respond $ responseNotFound "You're not able to edit this post"
-                              True -> do
-                                response <- editPost conn body postId'
-                                respond response
+          Just authorizedUserId -> do
+            response <- editPost conn body authorizedUserId
+            respond response
       "makeAuthor" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
         case mbId of
@@ -123,17 +100,8 @@ application conn config req respond
               [] -> respond $ responseInternalError "Something went wrong: empty list"
               (x:_) -> if isAdmin x
                 then do
-                  if query' == ""
-                  then respond $ responseBadRequest "Enter user id"
-                  else do
-                    case lookup' "id" queryItems of
-                      Nothing -> respond $ responseBadRequest "Enter user id"
-                      Just userId -> do
-                        case readMaybe (BS.unpack userId) :: Maybe Int of
-                          Nothing -> respond $ responseBadRequest "User id should be a number"
-                          Just userId' -> do
-                            response <- makeAuthor conn body
-                            respond response
+                  response <- makeAuthor conn body
+                  respond response
                 else respond $ responseNotFound ""
       "removeAuthor" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
@@ -147,17 +115,8 @@ application conn config req respond
               [] -> respond $ responseInternalError "Something went wrong: empty list"
               (x:_) -> if isAdmin x
                 then do
-                  if query' == ""
-                  then respond $ responseBadRequest "Enter user id"
-                  else do
-                    case lookup' "id" queryItems of
-                      Nothing -> respond $ responseBadRequest "Enter user id"
-                      Just userId -> do
-                        case readMaybe (BS.unpack userId) :: Maybe Int of
-                          Nothing -> respond $ responseBadRequest "User id should be a number"
-                          Just userId' -> do
-                            response <- removeAuthor conn body
-                            respond response
+                  response <- removeAuthor conn body
+                  respond response
                 else respond $ responseNotFound ""
       "makeAdmin" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
@@ -171,17 +130,8 @@ application conn config req respond
               [] ->  respond $ responseInternalError "Something went wrong: empty list"
               (x:_) -> if isAdmin x
                 then do
-                  if query' == ""
-                  then respond $ responseBadRequest "Enter user id"
-                  else do
-                    case lookup' "id" queryItems of
-                      Nothing -> respond $ responseBadRequest "Enter user id"
-                      Just userId -> do
-                        case readMaybe (BS.unpack userId) :: Maybe Int of
-                          Nothing -> respond $ responseBadRequest "User id should be a number"
-                          Just userId' -> do
-                            response <- makeAdmin conn body
-                            respond response
+                  response <- makeAdmin conn body
+                  respond response
                 else respond $ responseNotFound ""
       "removeAdmin" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
@@ -195,17 +145,8 @@ application conn config req respond
               [] -> respond $ responseInternalError "Something went wrong: empty list"
               (x:_) -> if isAdmin x
                 then do
-                  if query' == ""
-                  then respond $ responseBadRequest "Enter user id"
-                  else do
-                    case lookup' "id" queryItems of
-                      Nothing -> respond $ responseBadRequest "Enter user id"
-                      Just userId -> do
-                        case readMaybe (BS.unpack userId) :: Maybe Int of
-                          Nothing -> respond $ responseBadRequest "User id should be a number"
-                          Just userId' -> do
-                            response <- removeAdmin conn body
-                            respond response
+                  response <- removeAdmin conn body
+                  respond response
                 else respond $ responseNotFound ""
       "publishPost" -> do
         (str, mbId) <- authorize conn mbBase64LoginAndPassword
