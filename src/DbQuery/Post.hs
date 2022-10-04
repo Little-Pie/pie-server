@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 
 module DbQuery.Post where
 
@@ -11,18 +12,29 @@ import qualified Data.ByteString.Lazy as LBS
 import Database.PostgreSQL.Simple.Types (Query(..))
 import Data.Maybe (fromMaybe)
 
-insertNewPost :: Connection -> String -> String -> Int -> Int -> Bool -> IO (LBS.ByteString)
-insertNewPost conn title text categoryId userId isPublished = do
-  execute conn "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") VALUES (?,?,?,?,?)" (title,text,userId,isPublished,categoryId)
-  pure "Post is created"
+insertNewPost :: Connection -> String -> String -> Int -> Int -> Bool -> [String] -> [String] -> IO ()
+insertNewPost conn title text categoryId userId isPublished base64Images contentTypes = do
+  postId' <- mapM (pure . fromOnly) =<< returning conn "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") VALUES (?,?,?,?,?) RETURNING id" [(title,text,userId,isPublished,categoryId)] :: IO [Int]
+  case postId' of
+    [] -> putStrLn "Something went wrong: post wasn't created"
+    (postId:_) -> do
+      let imageRows = zipWith (postId,,) base64Images contentTypes
+      executeMany conn "INSERT INTO images (postId,base64Image,contentType) VALUES (?,?,?)" imageRows
+      pure ()
 
-editPost :: Connection -> String -> String -> Int -> Int -> Bool -> IO (LBS.ByteString)
-editPost conn title text categoryId postId isPublished = do
+editPost :: Connection -> String -> String -> Int -> Int -> Bool -> [String] -> [String] -> IO ()
+editPost conn title text categoryId postId isPublished base64Images contentTypes = do
   execute conn "UPDATE posts SET (title,text,\"isPublished\",\"categoryId\") = (?,?,?) WHERE id = (?)" (title, text, isPublished, categoryId, postId)
-  pure "Changes applied"
+  case base64Images of
+    [] -> pure ()
+    _ -> do
+      let imageRows = zipWith (postId,,) base64Images contentTypes
+      execute conn "DELETE FROM images WHERE postId = (?)" (Only postId)
+      executeMany conn "INSERT INTO images (postId,base64Image,contentType) VALUES (?,?,?)" imageRows
+      pure ()
 
 getPostById :: Connection -> Int -> IO [Post]
-getPostById conn postId = query conn "select * from posts where id=(?)" $ (Only postId)
+getPostById conn postId = query conn "select * from posts where id=(?)" (Only postId)
 
 initQuery = "SELECT posts.*,users.name,categories.name FROM posts JOIN users ON \"posts.authorId\" = users.id JOIN categories ON \"posts.categoryId\" = categories.id WHERE \"isPublished\" = true"
 
@@ -47,5 +59,6 @@ createFilterDBReq filt filterParam = case filt of
 
 showPosts :: Connection -> Int -> Int -> [(BS.ByteString, BS.ByteString)] -> (Maybe BS.ByteString) -> IO [API.GetPosts]
 showPosts conn limit' offset' queryFilters mbQuerySortBy = do
-    query conn (initQuery <> (getFilterBy queryFilters) <> (getSortBy mbQuerySortBy) <> " limit (?) offset (?)") (limit', offset')
+    -- query conn (initQuery <> (getFilterBy queryFilters) <> (getSortBy mbQuerySortBy) <> " limit (?) offset (?)") (limit', offset')
+    undefined
 

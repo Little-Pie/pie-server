@@ -15,10 +15,11 @@ data GetPosts = GetPosts {postId :: Int
                  ,isPublished :: Bool
                  ,authorName :: String
                  ,categoryName :: String
+                 ,base64Images :: [String]
                  }
 
 instance ToJSON GetPosts where
-  toJSON (GetPosts postId title text categoryId createdAt authorId isPublished authorName categoryName) = object ["id" .= postId
+  toJSON (GetPosts postId title text categoryId createdAt authorId isPublished authorName categoryName base64Images) = object ["id" .= postId
                                                                                      ,"title" .= title
                                                                                      ,"createdAt" .= createdAt
                                                                                      ,"text" .= text
@@ -27,7 +28,5 @@ instance ToJSON GetPosts where
                                                                                      ,"author" .= authorId
                                                                                      ,"authorName" .= authorName
                                                                                      ,"isPublished" .= isPublished
+                                                                                     ,"base64Images" .= base64Images
                                                                                      ]
-
-instance FromRow GetPosts where
-  fromRow = GetPosts <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field

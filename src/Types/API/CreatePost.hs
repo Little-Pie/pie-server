@@ -8,6 +8,8 @@ data CreatePostRequest = CreatePostRequest {title :: String
                                            ,text :: String
                                            ,categoryId :: Int
                                            ,isPublished :: Bool
+                                           ,base64Images :: [String]
+                                           ,contentTypes :: [String]
                                            }
 
 instance FromJSON CreatePostRequest where
@@ -15,3 +17,5 @@ instance FromJSON CreatePostRequest where
                                                            <*> createPostRequest .: "text"
                                                            <*> createPostRequest .: "categoryId"
                                                            <*> createPostRequest .: "isPublished"
+                                                           <*> createPostRequest .: "base64Images"
+                                                           <*> createPostRequest .: "contentTypes"

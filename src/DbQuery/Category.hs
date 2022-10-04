@@ -7,11 +7,11 @@ import Database.PostgreSQL.Simple
 
 getCategoryById :: Connection -> Int -> IO [Category]
 getCategoryById conn categoryId =
-  query conn "SELECT * FROM categories WHERE id=(?)" (Only categoryId) :: IO [Category]
+  query conn "SELECT * FROM categories WHERE id=(?)" (Only categoryId)
 
 getGeneralCategoryByName :: Connection -> String -> IO [Category]
 getGeneralCategoryByName conn name =
-  query conn "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=null" (Only name) :: IO [Category]
+  query conn "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=null" (Only name)
 
 insertNewGeneralCategory :: Connection -> String -> IO ()
 insertNewGeneralCategory conn name = do
@@ -20,7 +20,7 @@ insertNewGeneralCategory conn name = do
 
 getCategoryByNameAndParent ::  Connection -> String -> Int -> IO [Category]
 getCategoryByNameAndParent conn name parentCategoryId = do
-  query conn "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=(?)" (name,parentCategoryId) :: IO [Category]
+  query conn "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=(?)" (name,parentCategoryId)
 
 insertNewCategory :: Connection -> String -> Int -> IO ()
 insertNewCategory conn name parentCategoryId = do

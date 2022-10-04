@@ -32,26 +32,15 @@ editPost conn body authorizedUserId = case decode body :: Maybe API.EditPostRequ
     case posts of
       [] -> pure $ responseBadRequest "There are no posts with such id"
       (post:_) -> do
-        admin <- DBU.getUserById conn authorizedUserId
-        case admin of
-          [] -> pure $ responseInternalError "Something went wrong: empty list"
-          (x:_) -> if isAdmin x
-            then do
-              let newPost = post {
-                title = maybe (title post) Prelude.id (API.title bodyParsed),
-                text = maybe (text post) Prelude.id (API.text bodyParsed),
-                categoryId = maybe (categoryId post) Prelude.id (checkedCategoryId),
-                isPublished = maybe (isPublished post) Prelude.id (API.isPublished bodyParsed)}
-              DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (editPostId) (isPublished newPost)
-              pure $ responseOk "Changes applied"
-            else do
-              if authorizedUserId == authorId post
-                then do
-                  let newPost = post {
-                    title = maybe (title post) Prelude.id (API.title bodyParsed),
-                    text = maybe (text post) Prelude.id (API.text bodyParsed),
-                    categoryId = maybe (categoryId post) Prelude.id (checkedCategoryId),
-                    isPublished = maybe (isPublished post) Prelude.id (API.isPublished bodyParsed)}
-                  DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (editPostId) (isPublished newPost)
-                  pure $ responseOk "Changes applied"
-                else pure $ responseNotFound ""
+        if authorizedUserId == authorId post
+          then do
+            let newPost = post {
+              title = maybe (title post) Prelude.id (API.title bodyParsed),
+              text = maybe (text post) Prelude.id (API.text bodyParsed),
+              categoryId = maybe (categoryId post) Prelude.id (checkedCategoryId),
+              isPublished = maybe (isPublished post) Prelude.id (API.isPublished bodyParsed)}
+            let base64Images = maybe [] Prelude.id (API.base64Images bodyParsed)
+            let contentTypes = maybe [] Prelude.id (API.contentTypes bodyParsed)
+            DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (editPostId) (isPublished newPost) base64Images contentTypes
+            pure $ responseOk "Changes applied"
+          else pure $ responseNotFound ""

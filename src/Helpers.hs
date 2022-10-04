@@ -76,6 +76,9 @@ responsePlainText :: Status -> LBS.ByteString -> Response
 responsePlainText =
   (`responseLBS` [(hContentType,"text/plain")])
 
+responseImage :: BS.ByteString -> LBS.ByteString -> Response
+responseImage contentType = responseLBS status200 [(hContentType,contentType)]
+
 withLogging :: Middleware
 withLogging app req respond =
   app req $ \response -> do

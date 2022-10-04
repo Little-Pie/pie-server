@@ -13,6 +13,7 @@ import Endpoints.EditPost
 import Endpoints.EditCategory
 import Endpoints.CreateUser
 import Endpoints.CreatePost
+import Endpoints.GetImageById
 import Control.Monad
 import Data.Maybe (fromMaybe)
 import Text.Read (readMaybe)
@@ -79,6 +80,9 @@ application conn config req respond
           Just authorizedUserId -> do
             response <- editCategory conn body authorizedUserId
             respond response
+      "getImageById" -> do
+        response <- getImageById conn body
+        respond response
       _ -> respond $ responseNotFound ""
   | path == "" = respond $
               if query' /= ""
