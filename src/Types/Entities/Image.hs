@@ -6,8 +6,8 @@ import Data.Aeson
 import Database.PostgreSQL.Simple.FromRow
 
 data Image = Image {imageId :: Int
-                   ,base64Image :: String
                    ,postId :: Int
+                   ,base64Image :: String
                    ,contentType :: String
                    }
 

@@ -5,9 +5,13 @@ module Routing where
 import qualified DbQuery.User as DBU
 import qualified DbQuery.Post as DBP
 import qualified DbQuery.Category as DBC
+import qualified DbQuery.Image as DBI
 import Helpers
+import qualified Types.API.PostWithImages as API
 import Types.Entities.Post
 import Types.Entities.User
+import qualified Types.Entities.Image as I
+import qualified Types.Entities.GetPosts as GP
 import Endpoints.CreateCategory
 import Endpoints.EditPost
 import Endpoints.EditCategory
@@ -80,14 +84,18 @@ application conn config req respond
           Just authorizedUserId -> do
             response <- editCategory conn body authorizedUserId
             respond response
-      "getImageById" -> do
-        response <- getImageById conn body
-        respond response
       _ -> respond $ responseNotFound ""
   | path == "" = respond $
               if query' /= ""
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi GET!"
+  | path == "getImageById" = case lookup' "id" queryItems of
+    Nothing -> respond $ responseBadRequest "Enter image id"
+    Just imageId -> case readMaybe (BS.unpack imageId) :: Maybe Int of
+      Nothing -> respond $ responseBadRequest "Image id should be a number"
+      Just imageId' -> do
+        response <- getImageById conn imageId'
+        respond response
   | path == "categories" = do
     let (mbLimit, mbOffset) = (join $ readMaybe . BS.unpack <$> lookup' "limit" queryItems :: Maybe Int, join $ readMaybe . BS.unpack <$> lookup' "offset" queryItems :: Maybe Int)
     let cfgLimit = limit config
@@ -110,7 +118,9 @@ application conn config req respond
     let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
     let offset' = fromMaybe (offset config) mbOffset
     posts <- DBP.showPosts conn limit' offset' queryFilters mbQuerySortBy
-    respond $ responseOk $ encodePretty posts
+    images <- DBI.getImagesByPostIds conn (map GP.postId posts)
+    let postsWithImages = mkPostsWithImages posts images
+    respond $ responseOk $ encodePretty postsWithImages
   | otherwise = respond $ responseNotFound ""
 
   where queryItems = queryString req
@@ -126,3 +136,17 @@ application conn config req respond
           ((headerName,bStr):xs) -> if headerName == "Authorization"
             then Just bStr
             else getBase64LoginAndPassword xs
+
+        mkPostsWithImages :: [GP.GetPosts] -> [I.Image] -> [API.PostWithImages]
+        mkPostsWithImages [] _ = []
+        mkPostsWithImages (post:posts) images = API.PostWithImages
+          (GP.postId post)
+          (GP.title post)
+          (GP.text post)
+          (GP.categoryId post)
+          (GP.createdAt post)
+          (GP.authorId post)
+          (GP.isPublished post)
+          (GP.authorName post)
+          (GP.categoryName post)
+          ((map (("http://localhost:4000/getImageById?id=" <>) . show . I.imageId) $ filter (\image -> I.postId image == GP.postId post) images)) : mkPostsWithImages posts images

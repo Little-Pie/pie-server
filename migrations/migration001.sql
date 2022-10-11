@@ -10,3 +10,4 @@ CREATE TABLE users
 --ALTER TABLE <table_name> DROP COLUMN <column_name>
 --UPDATE <table_name> SET (login,password) = ('pie','123a') WHERE id = 1
 --select * from users limit 10 offset 3;
+--SELECT * FROM posts JOIN images ON images."postId" = posts.id WHERE posts.id = 1; 

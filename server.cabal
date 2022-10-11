@@ -43,8 +43,9 @@ library
       Types.API.EditCategory
       Types.API.EditPost
       Types.API.GetImageById
-      Types.API.GetPosts
+      Types.API.PostWithImages
       Types.Entities.Category
+      Types.Entities.GetPosts
       Types.Entities.Image
       Types.Entities.Post
       Types.Entities.User

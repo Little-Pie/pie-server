@@ -9,16 +9,15 @@ import Database.PostgreSQL.Simple
 import Helpers
 import Network.Wai (Response)
 import qualified Data.ByteString.Lazy as LBS
-import qualified Data.ByteString.Lazy.Char8 as CLBS
 import qualified Data.ByteString.Char8 as BS
 import Data.Aeson
+import qualified Data.ByteString.Base64 as BASE
 
-getImageById :: Connection -> LBS.ByteString -> IO Response
-getImageById conn body = case decode body :: Maybe API.GetImageByIdRequest of
-  Nothing -> pure $ responseBadRequest "Couldn't parse body"
-  Just bodyParsed -> do
-    let imageId' = API.imageId bodyParsed
-    image' <- DB.getImageById conn imageId'
-    case image' of
+getImageById :: Connection -> Int -> IO Response
+getImageById conn imageId = do
+    dbImage <- DB.getImageById conn imageId
+    case dbImage of
       [] -> pure $ responseBadRequest "There's no images with such id"
-      (image:_) -> pure $ responseImage (BS.pack $ contentType image) (CLBS.pack $ base64Image image)
+      (image:_) -> case BASE.decode $ BS.pack $ base64Image image of
+        Left err -> pure $ responseBadRequest "Couldn't decode from base64"
+        Right decodedImage -> pure $ responseImage (BS.pack $ contentType image) (LBS.fromStrict $ decodedImage)

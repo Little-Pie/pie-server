@@ -35,4 +35,4 @@ createPost conn body authorId = case decode body :: Maybe API.CreatePostRequest 
           _ -> do
             res <- insertNewPost conn title' text' categoryId' authorId isPublished' base64Images' contentType'
             pure $ responseOk "Post is created"
-      else pure $ responseNotFound "You can not post news, because you are not author"
+      else pure $ responseNotFound "You can not post news, because you are not an author"
