@@ -1,21 +1,26 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.Handlers.CreateUser where
 
 import qualified Types.Entities.User as U
-import Types.API.CreateUser
-import Network.Wai (Response)
-import Helpers
+import Types.API.CreateUser (CreateUserRequest (..))
 
 data Handle m = Handle
-  { insertNewUser :: String -> String -> String -> Bool -> Bool -> m ()
+  { insertNewUser :: String -> String -> String -> Bool -> Bool -> m (),
+    getUserByLogin :: String -> m [U.User]
   }
 
-createUserHandler :: (Monad m) => Handle m -> U.User -> CreateUserRequest -> m Response
+data CreateUserResult = Success | LoginIsTaken | NotFound
+  deriving (Eq, Show)
+
+createUserHandler :: (Monad m) => Handle m -> U.User -> CreateUserRequest -> m CreateUserResult
 createUserHandler Handle {..} user CreateUserRequest {..} = do
   if U.isAdmin user
     then do
-      insertNewUser name login password isAdmin isAuthor
-      pure $ responseOk "User is created"
-    else pure $ responseNotFound ""
+      mbUser <- getUserByLogin login
+      case mbUser of
+        [] -> do
+          insertNewUser name login password isAdmin isAuthor
+          pure Success
+        _ -> pure LoginIsTaken
+    else pure NotFound

@@ -32,6 +32,7 @@ dependencies:
 - aeson-pretty
 - time
 - base64-bytestring
+- hspec
 
 library:
   source-dirs: src
