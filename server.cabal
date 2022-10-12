@@ -35,6 +35,7 @@ library
       Endpoints.EditCategory
       Endpoints.EditPost
       Endpoints.GetImageById
+      Endpoints.Handlers.CreateUser
       Helpers
       Routing
       Types.API.CreateCategory

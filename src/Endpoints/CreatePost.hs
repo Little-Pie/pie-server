@@ -14,21 +14,19 @@ import Database.PostgreSQL.Simple
 import Helpers
 import Network.Wai (Response)
 
-createPost :: Connection -> LBS.ByteString -> Int -> IO Response
-createPost conn body authorId = case decode body :: Maybe API.CreatePostRequest of
-  Nothing -> pure $ responseBadRequest "Couldn't parse body"
-  Just bodyParsed -> do
+createPost :: Connection -> Int -> API.CreatePostRequest -> IO Response
+createPost conn authorId parsedReq = do
     author <- getUserById conn authorId
     case author of
       [] -> pure $ responseInternalError "Something went wrong: empty list"
       (x:_) -> if isAuthor x
       then do
-        let base64Images' = API.base64Images bodyParsed
-        let contentType' = API.contentTypes bodyParsed
-        let title' = API.title bodyParsed
-        let text' = API.text bodyParsed
-        let categoryId' = API.categoryId bodyParsed
-        let isPublished' = API.isPublished bodyParsed
+        let base64Images' = API.base64Images parsedReq
+        let contentType' = API.contentTypes parsedReq
+        let title' = API.title parsedReq
+        let text' = API.text parsedReq
+        let categoryId' = API.categoryId parsedReq
+        let isPublished' = API.isPublished parsedReq
         category <- getCategoryById conn categoryId'
         case category of
           [] -> pure $ responseBadRequest "No categories with such id"

@@ -13,12 +13,10 @@ import Data.Aeson
 import Helpers
 import Network.Wai (Response)
 
-createCategory :: Connection -> LBS.ByteString -> Int -> IO Response
-createCategory conn body userId  = case decode body :: Maybe API.CreateCategoryRequest of
-  Nothing -> pure $ responseBadRequest "Couldn't parse body"
-  Just bodyParsed -> do
-    let name' = API.name bodyParsed
-    let mbParentCategoryId = API.parentCategoryId bodyParsed
+createCategory :: Connection -> Int -> API.CreateCategoryRequest -> IO Response
+createCategory conn userId parsedReq = do
+    let name' = API.name parsedReq
+    let mbParentCategoryId = API.parentCategoryId parsedReq
     admin <- getUserById conn userId
     case admin of
       [] -> pure $ responseInternalError "Something went wrong: empty list"

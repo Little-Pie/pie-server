@@ -89,3 +89,16 @@ withLogging app req respond =
           $ BS.concat [ rawPathInfo    req
                       , rawQueryString req ]
     statusOf = show . statusCode . responseStatus
+
+withParsedRequest :: FromJSON a => LBS.ByteString -> (a -> IO Response) -> IO Response
+withParsedRequest reqBody f =
+  case decode reqBody of
+    Nothing -> pure $ responseBadRequest "Couldn't parse body"
+    Just parsedReq -> f parsedReq
+
+withAuthorization :: Connection -> Maybe BS.ByteString -> (Int -> IO Response) -> IO Response
+withAuthorization conn mbBase64LoginAndPassword f = do
+  (str, mbId) <- authorize conn mbBase64LoginAndPassword
+  case mbId of
+    Nothing -> pure $ responseUnauthorized str
+    Just authorizedUserId -> f authorizedUserId

@@ -13,11 +13,9 @@ import Database.PostgreSQL.Simple
 import Helpers
 import Network.Wai (Response)
 
-editCategory :: Connection -> LBS.ByteString -> Int -> IO Response
-editCategory conn body authorizedUserId = case decode body :: Maybe API.EditCategoryRequest of
-  Nothing -> pure $ responseBadRequest "Couldn't parse body"
-  Just bodyParsed -> do
-    let categoryId' = API.categoryId bodyParsed
+editCategory :: Connection -> Int -> API.EditCategoryRequest -> IO Response
+editCategory conn authorizedUserId parsedReq = do
+    let categoryId' = API.categoryId parsedReq
     categories <- DBC.getCategoryById conn categoryId'
     case categories of
       [] -> pure $ responseBadRequest "There are no categories with such id"
@@ -28,8 +26,8 @@ editCategory conn body authorizedUserId = case decode body :: Maybe API.EditCate
           (x:_) -> if U.isAdmin x
             then do
               let newCategory = category {
-                name = maybe (name category) Prelude.id (API.name bodyParsed),
-                parentCategoryId = maybe (parentCategoryId category) Just (API.parentCategoryId bodyParsed)}
+                name = maybe (name category) Prelude.id (API.name parsedReq),
+                parentCategoryId = maybe (parentCategoryId category) Just (API.parentCategoryId parsedReq)}
               DBC.editCategory conn (name newCategory) (parentCategoryId newCategory) (categoryId')
               pure $ responseOk "Changes applied"
             else pure $ responseNotFound ""

@@ -40,50 +40,25 @@ application conn config req respond
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi POST!"
       "createUser" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just authorizedUserId -> do
-            response <- createUser conn body authorizedUserId
-            respond response
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
+          withParsedRequest body (createUser conn authorizedUserId)
+        respond response
       "createPost" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just authorizedUserId -> do
-            response <- createPost conn body authorizedUserId
-            respond response 
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
+          withParsedRequest body (createPost conn authorizedUserId)
+        respond response
       "editPost" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just authorizedUserId -> do
-            response <- editPost conn body authorizedUserId
-            respond response
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
+          withParsedRequest body (editPost conn authorizedUserId)
+        respond response
       "createCategory" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just authorizedUserId -> do
-            response <- createCategory conn body authorizedUserId
-            respond response
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
+          withParsedRequest body (createCategory conn authorizedUserId)
+        respond response
       "editCategory" -> do
-        (str, mbId) <- authorize conn mbBase64LoginAndPassword
-        case mbId of
-          Nothing -> do
-            LBSC.putStrLn str
-            respond $ responseUnauthorized str
-          Just authorizedUserId -> do
-            response <- editCategory conn body authorizedUserId
-            respond response
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
+          withParsedRequest body (editCategory conn authorizedUserId)
+        respond response
       _ -> respond $ responseNotFound ""
   | path == "" = respond $
               if query' /= ""
