@@ -4,6 +4,7 @@ module Helpers where
 
 import Types.Entities.Post
 import Types.Entities.User
+import DbQuery.User
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC
@@ -35,20 +36,20 @@ localPG = defaultConnectInfo
         , connectPassword = "5368"
         }
 
-authorize :: Connection -> Maybe BS.ByteString -> IO (LBS.ByteString,Maybe Int)
+authorize :: Connection -> Maybe BS.ByteString -> IO (LBS.ByteString,Maybe User)
 authorize conn mbBase64LoginAndPassword = case mbBase64LoginAndPassword of
   Nothing -> pure ("Found no header for Authorization",Nothing)
   Just base64LoginAndPassword -> case BASE.decode base64LoginAndPassword of
     Left err -> pure (LBSC.pack err,Nothing)
     Right loginPassword -> do
       let login' = BS.takeWhile (/= ':') loginPassword
-      users <- query conn "select * from users where login=(?)" (Only $ BS.unpack login') :: IO [User]
+      users <- getUserByLogin conn (BS.unpack login')
       case users of
         [] -> pure ("Wrong login",Nothing)
-        [us] -> do
-          let loginPassword' = BS.pack $ login us ++ ":" ++ password us
+        [user] -> do
+          let loginPassword' = BS.pack $ login user ++ ":" ++ password user
           if loginPassword == loginPassword'
-          then pure ("User is authorized",Just (userId us))
+          then pure ("User is authorized",Just user)
           else pure ("Wrong password",Nothing)
 
 getQueryFilters :: [(BS.ByteString, Maybe BS.ByteString)] -> [(BS.ByteString, BS.ByteString)]
@@ -96,9 +97,9 @@ withParsedRequest reqBody f =
     Nothing -> pure $ responseBadRequest "Couldn't parse body"
     Just parsedReq -> f parsedReq
 
-withAuthorization :: Connection -> Maybe BS.ByteString -> (Int -> IO Response) -> IO Response
+withAuthorization :: Connection -> Maybe BS.ByteString -> (User -> IO Response) -> IO Response
 withAuthorization conn mbBase64LoginAndPassword f = do
-  (str, mbId) <- authorize conn mbBase64LoginAndPassword
-  case mbId of
+  (str, mbUser) <- authorize conn mbBase64LoginAndPassword
+  case mbUser of
     Nothing -> pure $ responseUnauthorized str
-    Just authorizedUserId -> f authorizedUserId
+    Just authorizedUser -> f authorizedUser

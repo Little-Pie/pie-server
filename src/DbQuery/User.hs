@@ -8,8 +8,8 @@ import Database.PostgreSQL.Simple
 getUsers :: Connection -> IO [User]
 getUsers conn = query_ conn "select * from users"
 
-getUserById :: Connection -> Int -> IO [User]
-getUserById conn userId = query conn "SELECT * FROM users WHERE id=(?)" (Only userId)
+getUserByLogin :: Connection -> String -> IO [User]
+getUserByLogin conn login = query conn "SELECT * FROM users WHERE login=(?)" (Only login)
 
 insertNewUser :: Connection -> String -> String -> String -> Bool -> Bool -> IO ()
 insertNewUser conn name login password isAdmin isAuthor = do

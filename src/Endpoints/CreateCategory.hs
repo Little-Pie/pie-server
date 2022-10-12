@@ -13,28 +13,25 @@ import Data.Aeson
 import Helpers
 import Network.Wai (Response)
 
-createCategory :: Connection -> Int -> API.CreateCategoryRequest -> IO Response
-createCategory conn userId parsedReq = do
+createCategory :: Connection -> User -> API.CreateCategoryRequest -> IO Response
+createCategory conn user parsedReq = do
     let name' = API.name parsedReq
     let mbParentCategoryId = API.parentCategoryId parsedReq
-    admin <- getUserById conn userId
-    case admin of
-      [] -> pure $ responseInternalError "Something went wrong: empty list"
-      (x:_) -> if isAdmin x
-        then do
-          case mbParentCategoryId of
-            Nothing -> do
-              categories <- getGeneralCategoryByName conn name'
-              case categories of
-                [] -> do
-                  insertNewGeneralCategory conn name'
-                  pure $ responseOk "Category is created"
-                categories' -> pure $ responseBadRequest "This category already exists"
-            Just parentCategoryId' -> do
-              categories <- getCategoryByNameAndParent conn name' parentCategoryId'
-              case categories of
-                [] -> do
-                  insertNewCategory conn name' parentCategoryId'
-                  pure $ responseOk "Category is created"
-                categories' -> pure $ responseBadRequest "This category already exists"
-        else pure $ responseNotFound ""
+    if isAdmin user
+      then do
+        case mbParentCategoryId of
+          Nothing -> do
+            categories <- getGeneralCategoryByName conn name'
+            case categories of
+              [] -> do
+                insertNewGeneralCategory conn name'
+                pure $ responseOk "Category is created"
+              categories' -> pure $ responseBadRequest "This category already exists"
+          Just parentCategoryId' -> do
+            categories <- getCategoryByNameAndParent conn name' parentCategoryId'
+            case categories of
+              [] -> do
+                insertNewCategory conn name' parentCategoryId'
+                pure $ responseOk "Category is created"
+              categories' -> pure $ responseBadRequest "This category already exists"
+      else pure $ responseNotFound ""

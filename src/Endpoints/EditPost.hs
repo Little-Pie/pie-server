@@ -15,8 +15,8 @@ import Database.PostgreSQL.Simple
 import Helpers
 import Network.Wai (Response)
 
-editPost :: Connection -> Int -> API.EditPostRequest -> IO Response
-editPost conn authorizedUserId parsedReq = do
+editPost :: Connection -> User -> API.EditPostRequest -> IO Response
+editPost conn user parsedReq = do
     let editPostId = API.postId parsedReq
     checkedCategoryId <-
       case API.categoryId parsedReq of
@@ -30,7 +30,7 @@ editPost conn authorizedUserId parsedReq = do
     case posts of
       [] -> pure $ responseBadRequest "There are no posts with such id"
       (post:_) -> do
-        if authorizedUserId == authorId post
+        if userId user == authorId post
           then do
             let newPost = post {
               title = maybe (title post) Prelude.id (API.title parsedReq),

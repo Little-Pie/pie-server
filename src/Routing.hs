@@ -40,24 +40,24 @@ application conn config req respond
               then responseBadRequest "No query parameters needed!"
               else responseOk "Hi POST!"
       "createUser" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
-          withParsedRequest body (createUser conn authorizedUserId)
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest body (createUser conn authorizedUser)
         respond response
       "createPost" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
-          withParsedRequest body (createPost conn authorizedUserId)
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest body (createPost conn authorizedUser)
         respond response
       "editPost" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
-          withParsedRequest body (editPost conn authorizedUserId)
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest body (editPost conn authorizedUser)
         respond response
       "createCategory" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
-          withParsedRequest body (createCategory conn authorizedUserId)
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest body (createCategory conn authorizedUser)
         respond response
       "editCategory" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUserId ->
-          withParsedRequest body (editCategory conn authorizedUserId)
+        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest body (editCategory conn authorizedUser)
         respond response
       _ -> respond $ responseNotFound ""
   | path == "" = respond $

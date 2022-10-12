@@ -12,11 +12,10 @@ import Database.PostgreSQL.Simple
 import Helpers
 import Endpoints.Handlers.CreateUser (Handle (..), createUserHandler)
 
-createUser :: Connection -> Int -> CreateUserRequest -> IO Response
-createUser conn userId req =
-  createUserHandler handle userId req
+createUser :: Connection -> U.User -> CreateUserRequest -> IO Response
+createUser conn user req =
+  createUserHandler handle user req
   where
     handle = Handle
-      { getUserById = DB.getUserById conn,
-        insertNewUser = DB.insertNewUser conn
+      { insertNewUser = DB.insertNewUser conn
       }
