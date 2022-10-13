@@ -14,7 +14,7 @@ data CreateUserResult = Success | LoginIsTaken | NotFound
   deriving (Eq, Show)
 
 createUserHandler :: (Monad m) => Handle m -> U.User -> CreateUserRequest -> m CreateUserResult
-createUserHandler Handle {..} user CreateUserRequest {..} = do
+createUserHandler Handle {..} user CreateUserRequest {..} =
   if U.isAdmin user
     then do
       mbUser <- getUserByLogin login

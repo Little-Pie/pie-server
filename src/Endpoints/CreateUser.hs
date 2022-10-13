@@ -1,18 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.CreateUser where
 
-import qualified Types.Entities.User as U
+import Types.Entities.User (User)
 import qualified DbQuery.User as DB
-import Types.API.CreateUser
-import qualified Data.ByteString.Lazy as LBS
+import qualified Types.API.CreateUser as API
 import Network.Wai (Response)
-import Database.PostgreSQL.Simple
-import Helpers
+import Database.PostgreSQL.Simple (Connection)
+import Helpers (responseOk,responseBadRequest,responseNotFound)
 import Endpoints.Handlers.CreateUser (CreateUserResult (..), Handle (..), createUserHandler)
 
-createUser :: Connection -> U.User -> CreateUserRequest -> IO Response
+createUser :: Connection -> User -> API.CreateUserRequest -> IO Response
 createUser conn user req = do
   res <- createUserHandler handle user req
   case res of
