@@ -5,7 +5,6 @@ module Endpoints.CreateUser where
 import Endpoints.Handlers.CreateUser (CreateUserResult (..), Handle (..), createUserHandler)
 import Types.Entities.User (User (..))
 import Types.API.CreateUser (CreateUserRequest (..))
-import Helpers (responseOk)
 import Data.Functor.Identity (Identity)
 import Test.Hspec (describe, it, shouldBe, SpecWith)
 

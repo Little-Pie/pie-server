@@ -36,6 +36,7 @@ library
       Endpoints.EditPost
       Endpoints.GetImageById
       Endpoints.Handlers.CreateCategory
+      Endpoints.Handlers.CreatePost
       Endpoints.Handlers.CreateUser
       Helpers
       Routing
@@ -100,6 +101,7 @@ test-suite server-test
   main-is: Spec.hs
   other-modules:
       Endpoints.CreateCategory
+      Endpoints.CreatePost
       Endpoints.CreateUser
       Paths_server
   hs-source-dirs:

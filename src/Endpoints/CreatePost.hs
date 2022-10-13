@@ -1,28 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.CreatePost where
 
-import DbQuery.Category
-import DbQuery.Post
-import DbQuery.User
-import Types.Entities.Category
+import qualified DbQuery.Category as DBC
+import qualified DbQuery.Post as DBP
 import qualified Types.Entities.User as U
-import Types.API.CreatePost
-import qualified Data.ByteString.Lazy as LBS
-import Data.Aeson
-import Database.PostgreSQL.Simple
-import Helpers
+import qualified Types.API.CreatePost as API
+import Database.PostgreSQL.Simple (Connection)
+import Helpers (responseOk,responseBadRequest)
 import Network.Wai (Response)
+import Endpoints.Handlers.CreatePost (CreatePostResult (..), Handle (..), createPostHandler)
 
-createPost :: Connection -> U.User -> CreatePostRequest -> IO Response
-createPost conn author CreatePostRequest {..} = do
-  if U.isAuthor author
-    then do
-      category <- getCategoryById conn categoryId
-      case category of
-        [] -> pure $ responseBadRequest "No categories with such id"
-        _ -> do
-          insertNewPost conn title text categoryId (U.userId author) isPublished base64Images contentTypes
-          pure $ responseOk "Post is created"
-    else pure $ responseNotFound "You can not post news, because you are not an author"
+createPost :: Connection -> U.User -> API.CreatePostRequest -> IO Response
+createPost conn author req = do
+  res <- createPostHandler handle author req
+  case res of
+    Success -> pure $ responseOk "Post is created"
+    CategoryNotExist -> pure $ responseBadRequest "Category with such id does not exist"
+    NotAuthor -> pure $ responseBadRequest "You can not post news because you are not an author"
+  where
+    handle = Handle
+      {getCategoryById = DBC.getCategoryById conn,
+       insertNewPost = DBP.insertNewPost conn
+      }
+
