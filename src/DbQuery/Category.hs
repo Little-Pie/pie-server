@@ -34,3 +34,14 @@ editCategory :: Connection -> String -> Maybe Int -> Int -> IO ()
 editCategory conn name parentCategoryId categoryId = do
   execute conn "UPDATE categories SET (name,\"parentId\") = (?,?) WHERE id = (?)" (name,parentCategoryId,categoryId)
   pure ()
+
+getCategoryByParentId :: Connection -> [Int] -> IO [Category]
+getCategoryByParentId conn ids = do
+  case mkQuery ids of
+    "" -> pure []
+    someQuery -> query conn ("SELECT * FROM categories WHERE " <> someQuery) ids
+  where
+    mkQuery :: [Int] -> Query
+    mkQuery [] = ""
+    mkQuery [x] = " parentId = (?)"
+    mkQuery (x:xs) = " parentId = (?) OR "

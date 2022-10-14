@@ -14,7 +14,8 @@ handle = Handle
   { getGeneralCategoryByName = \_ -> pure [],
     insertNewGeneralCategory = \_ -> pure (),
     getCategoryByNameAndParent = \_ _ -> pure [],
-    insertNewCategory = \_ _ -> pure ()
+    insertNewCategory = \_ _ -> pure (),
+    getCategoryById = \_ -> pure [category]
   }
 
 user :: User
@@ -38,6 +39,9 @@ createCategoryTest =
     it "Should return bad request in case general category with such name already exists" $ do
       let res = createCategoryHandler handle {getGeneralCategoryByName = \_ -> pure [category {Types.Entities.Category.parentCategoryId = Nothing}]} user createCategoryRequest {Types.API.CreateCategory.parentCategoryId = Nothing}
       res `shouldBe` pure NameIsTaken
+    it "Should return bad request in case parent category with such id does not exist" $ do
+      let res = createCategoryHandler handle {getCategoryById = \_ -> pure []} user createCategoryRequest
+      res `shouldBe` pure ParentCategoryNotExist
     it "Should return bad request in case category with such name already exists" $ do
       let res = createCategoryHandler handle {getCategoryByNameAndParent = \_ _ -> pure [category]} user createCategoryRequest
       res `shouldBe` pure NameIsTaken

@@ -6,7 +6,7 @@ import qualified DbQuery.Category as DB
 import Types.Entities.User (User)
 import qualified Types.API.CreateCategory as API
 import Database.PostgreSQL.Simple (Connection)
-import Helpers (responseOk,responseBadRequest,responseNotFound)
+import Helpers (responseOk, responseBadRequest, responseNotFound)
 import Network.Wai (Response)
 import Endpoints.Handlers.CreateCategory (CreateCategoryResult (..), Handle (..), createCategoryHandler)
 
@@ -16,11 +16,13 @@ createCategory conn user req = do
   case res of
     Success -> pure $ responseOk "Category is created"
     NameIsTaken -> pure $ responseBadRequest "Category with such name already exists"
+    ParentCategoryNotExist -> pure $ responseBadRequest "Parent category with such id does not exist"
     NotFound -> pure $ responseNotFound ""
   where
     handle = Handle
       { getGeneralCategoryByName = DB.getGeneralCategoryByName conn,
         insertNewGeneralCategory = DB.insertNewGeneralCategory conn,
         getCategoryByNameAndParent = DB.getCategoryByNameAndParent conn,
-        insertNewCategory = DB.insertNewCategory conn
+        insertNewCategory = DB.insertNewCategory conn,
+        getCategoryById = DB.getCategoryById conn
       }

@@ -7,13 +7,14 @@ import qualified DbQuery.Post as DBP
 import qualified DbQuery.User as DBU
 import qualified Types.API.EditPost as API
 import Types.Entities.Category
-import Types.Entities.Post
+import Types.Entities.Post as Post
 import Types.Entities.User
 import qualified Data.ByteString.Lazy as LBS
 import Data.Aeson
 import Database.PostgreSQL.Simple
 import Helpers
 import Network.Wai (Response)
+import Data.Maybe (fromMaybe)
 
 editPost :: Connection -> User -> API.EditPostRequest -> IO Response
 editPost conn user parsedReq = do
@@ -33,12 +34,12 @@ editPost conn user parsedReq = do
         if userId user == authorId post
           then do
             let newPost = post {
-              title = maybe (title post) Prelude.id (API.title parsedReq),
-              text = maybe (text post) Prelude.id (API.text parsedReq),
-              categoryId = maybe (categoryId post) Prelude.id (checkedCategoryId),
-              isPublished = maybe (isPublished post) Prelude.id (API.isPublished parsedReq)}
-            let base64Images = maybe [] Prelude.id (API.base64Images parsedReq)
-            let contentTypes = maybe [] Prelude.id (API.contentTypes parsedReq)
-            DBP.editPost conn (title newPost) (text newPost) (categoryId newPost) (editPostId) (isPublished newPost) base64Images contentTypes
+              title = fromMaybe (title post) (API.title parsedReq),
+              text = fromMaybe (text post) (API.text parsedReq),
+              Post.categoryId = fromMaybe (Post.categoryId post) checkedCategoryId,
+              isPublished = fromMaybe (isPublished post) (API.isPublished parsedReq)}
+            let base64Images = fromMaybe [] (API.base64Images parsedReq)
+            let contentTypes = fromMaybe [] (API.contentTypes parsedReq)
+            DBP.editPost conn (title newPost) (text newPost) (Post.categoryId newPost) editPostId (isPublished newPost) base64Images contentTypes
             pure $ responseOk "Changes applied"
           else pure $ responseNotFound ""

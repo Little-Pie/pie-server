@@ -38,14 +38,14 @@ getPostById conn postId = query conn "select * from posts where id=(?)" (Only po
 
 initQuery = "SELECT posts.*,users.name,categories.name FROM posts JOIN users ON posts.\"authorId\" = users.id JOIN categories ON posts.\"categoryId\" = categories.id LEFT OUTER JOIN images ON posts.id = images.\"postId\" WHERE \"isPublished\" = true "
 
-getSortBy :: (Maybe BS.ByteString) -> Query
-getSortBy mbSortBy = fromMaybe ("") ((\n -> case n of
+getSortBy :: Maybe BS.ByteString -> Query
+getSortBy = maybe "" (\n -> case n of
     "category" -> " order by categories.name "
     "author" -> " order by users.name "
     "createdAt" -> " order by createdAt "
     "title" -> " order by title "
     "imagesNumber" -> " GROUP BY posts.id, users.name, categories.name ORDER BY COUNT(images.\"postId\") DESC "
-    _ -> "") <$> mbSortBy)
+    _ -> "")
 
 getFilterBy :: [(BS.ByteString, BS.ByteString)] -> Query
 getFilterBy queryFilters = mconcat $ map (\(filter',filterParam) -> createFilterDBReq filter' filterParam) queryFilters
@@ -61,7 +61,5 @@ createFilterDBReq filt filterParam = case filt of
   "text" -> " AND text like '%" <> Query filterParam <> "%' "
 
 showPosts :: Connection -> Int -> Int -> [(BS.ByteString, BS.ByteString)] -> (Maybe BS.ByteString) -> IO [GetPosts]
-showPosts conn limit' offset' queryFilters mbQuerySortBy = do
-  let q = (initQuery <> (getFilterBy queryFilters) <> (getSortBy mbQuerySortBy) <> " limit (?) offset (?)")
-  print q
-  query conn (initQuery <> (getFilterBy queryFilters) <> (getSortBy mbQuerySortBy) <> " limit (?) offset (?)") (limit', offset')
+showPosts conn limit' offset' queryFilters mbQuerySortBy =
+  query conn (initQuery <> getFilterBy queryFilters <> getSortBy mbQuerySortBy <> " limit (?) offset (?)") (limit', offset')

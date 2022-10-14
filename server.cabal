@@ -38,6 +38,7 @@ library
       Endpoints.Handlers.CreateCategory
       Endpoints.Handlers.CreatePost
       Endpoints.Handlers.CreateUser
+      Endpoints.Handlers.EditCategory
       Helpers
       Routing
       Types.API.CreateCategory
@@ -103,6 +104,7 @@ test-suite server-test
       Endpoints.CreateCategory
       Endpoints.CreatePost
       Endpoints.CreateUser
+      Endpoints.EditCategory
       Paths_server
   hs-source-dirs:
       test

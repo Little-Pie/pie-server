@@ -2,29 +2,29 @@
 
 module Endpoints.EditCategory where
 
-import qualified DbQuery.Category as DBC
-import qualified DbQuery.User as DBU
+import qualified DbQuery.Category as DB
 import qualified Types.API.EditCategory as API
-import Types.Entities.Category
-import qualified Types.Entities.User as U
-import qualified Data.ByteString.Lazy as LBS
-import Data.Aeson
-import Database.PostgreSQL.Simple
-import Helpers
+import Types.Entities.User (User)
+import Database.PostgreSQL.Simple (Connection)
+import Helpers (responseOk, responseBadRequest, responseNotFound)
 import Network.Wai (Response)
+import Endpoints.Handlers.EditCategory (EditCategoryResult(..), Handle(..), editCategoryHandler)
 
-editCategory :: Connection -> U.User -> API.EditCategoryRequest -> IO Response
-editCategory conn user parsedReq = do
-    let categoryId' = API.categoryId parsedReq
-    categories <- DBC.getCategoryById conn categoryId'
-    case categories of
-      [] -> pure $ responseBadRequest "There are no categories with such id"
-      (category:_) -> do
-        if U.isAdmin user
-          then do
-            let newCategory = category {
-              name = maybe (name category) Prelude.id (API.name parsedReq),
-              parentCategoryId = maybe (parentCategoryId category) Just (API.parentCategoryId parsedReq)}
-            DBC.editCategory conn (name newCategory) (parentCategoryId newCategory) (categoryId')
-            pure $ responseOk "Changes applied"
-          else pure $ responseNotFound ""
+editCategory :: Connection -> User -> API.EditCategoryRequest -> IO Response
+editCategory conn user req = do
+  res <- editCategoryHandler handle user req
+  case res of
+    Success -> pure $ responseOk "Changes applied"
+    NameIsTaken -> pure $ responseBadRequest "Category with such name already exists"
+    CategoryNotExist -> pure $ responseBadRequest "Category with such id does not exist"
+    IllegalParentCategoryId -> pure $ responseBadRequest "Illegal parent category id"
+    ParentCategoryNotExist -> pure $ responseBadRequest "Parent category with such id does not exist"
+    NotFound -> pure $ responseNotFound ""
+  where
+    handle = Handle
+      { getGeneralCategoryByName = DB.getGeneralCategoryByName conn,
+        getCategoryByNameAndParent = DB.getCategoryByNameAndParent conn,
+        Endpoints.Handlers.EditCategory.editCategory = DB.editCategory conn,
+        getCategoryById = DB.getCategoryById conn,
+        getCategoryByParentId = DB.getCategoryByParentId conn
+      }

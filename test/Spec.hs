@@ -1,6 +1,7 @@
 import Endpoints.CreateUser (createUserTest)
 import Endpoints.CreateCategory (createCategoryTest)
 import Endpoints.CreatePost (createPostTest)
+import Endpoints.EditCategory (editCategoryTest)
 import Test.Hspec (hspec)
 
 main :: IO ()
@@ -8,3 +9,4 @@ main = hspec $ do
   createUserTest
   createCategoryTest
   createPostTest
+  editCategoryTest
