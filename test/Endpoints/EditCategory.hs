@@ -32,7 +32,7 @@ generalCategory = Category 1 "name" Nothing
 
 editCategoryTest :: SpecWith ()
 editCategoryTest =
-  describe "Category creation tests" $ do
+  describe "Category editing tests" $ do
     it "Should successfuly edit category when requested by admin" $ do
       let res = editCategoryHandler handle user editCategoryRequest {EditCategory.parentCategoryId = Just 5}
       res `shouldBe` pure Success

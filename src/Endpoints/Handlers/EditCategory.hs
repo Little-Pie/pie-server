@@ -62,4 +62,3 @@ editCategoryHandler Handle {..} user EditCategoryRequest {..} = do
       case map C.categoryId categories of
         [] -> checkChildCategories [] acc
         childIds -> checkChildCategories childIds (acc ++ childIds)
--- 9 ways

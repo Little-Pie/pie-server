@@ -3,14 +3,14 @@
 module Endpoints.EditCategory where
 
 import qualified DbQuery.Category as DB
-import qualified Types.API.EditCategory as API
+import Types.API.EditCategory (EditCategoryRequest)
 import Types.Entities.User (User)
 import Database.PostgreSQL.Simple (Connection)
 import Helpers (responseOk, responseBadRequest, responseNotFound)
 import Network.Wai (Response)
 import Endpoints.Handlers.EditCategory (EditCategoryResult(..), Handle(..), editCategoryHandler)
 
-editCategory :: Connection -> User -> API.EditCategoryRequest -> IO Response
+editCategory :: Connection -> User -> EditCategoryRequest -> IO Response
 editCategory conn user req = do
   res <- editCategoryHandler handle user req
   case res of
