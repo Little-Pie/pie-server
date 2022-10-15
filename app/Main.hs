@@ -11,15 +11,11 @@ import Data.Time.Clock
 
 main :: IO ()
 main = do
-  conn <- connect localPG
   mbConfig <- getConfig
   case mbConfig of
     Nothing -> putStrLn "Couldn't parse config"
     Just config -> do
+      conn <- connect $ localPG config
       putStrLn "Serving..."
       run 4000 $ withLogging $ application conn config
       close conn
-
-  -- 1. достать нужные данные из запроса
-  -- 2. бизнес-логика
-  -- 3. формирование запроса в бд

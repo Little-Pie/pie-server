@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Helpers where
 
@@ -12,13 +13,24 @@ import Data.Aeson
 import qualified Data.ByteString.Base64 as BASE
 import Network.HTTP.Types (toQuery,statusCode,methodGet,methodPost,status200,hContentType,Status,status500,notFound404,badRequest400,unauthorized401,QueryItem,Query)
 import Network.Wai (lazyRequestBody,Middleware, responseStatus,responseLBS,Application,rawPathInfo,rawQueryString,requestMethod,Response,queryString)
-import Database.PostgreSQL.Simple (connect,Only(..),Connection,query,query_,ConnectInfo(..),defaultConnectInfo)
+import Database.PostgreSQL.Simple as Simple (connect,Only(..),Connection,query,query_,ConnectInfo(..),defaultConnectInfo)
 
 data Config = Config {limit :: Int
-                     ,offset :: Int}
+                     ,offset :: Int
+                     ,connectHost :: String
+                     ,connectDatabase :: String
+                     ,connectUser :: String
+                     ,connectPassword :: String
+                     }
 
 instance FromJSON Config where
-  parseJSON (Object config) = Config <$> config .: "limit" <*> config .: "offset"
+  parseJSON (Object config) = Config <$>
+                              config .: "limit" <*>
+                              config .: "offset" <*>
+                              config .: "connectHost" <*>
+                              config .: "connectDatabase" <*>
+                              config .: "connectUser" <*>
+                              config .: "connectPassword"
 
 getConfig :: IO (Maybe Config)
 getConfig = do
@@ -28,12 +40,12 @@ getConfig = do
     Nothing -> return Nothing
     Just conf -> return $ Just conf
 
-localPG :: ConnectInfo
-localPG = defaultConnectInfo
-        { connectHost = "localhost"
-        , connectDatabase = "server"
-        , connectUser = "server"
-        , connectPassword = "5368"
+localPG :: Config -> ConnectInfo
+localPG Config {..} = defaultConnectInfo
+        { Simple.connectHost = connectHost
+        , Simple.connectDatabase = connectDatabase
+        , Simple.connectUser = connectUser
+        , Simple.connectPassword = connectPassword
         }
 
 authorize :: Connection -> Maybe BS.ByteString -> IO (LBS.ByteString,Maybe User)
