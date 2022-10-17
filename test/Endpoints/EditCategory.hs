@@ -8,6 +8,7 @@ import Types.Entities.Category as Category (Category (..))
 import Types.API.EditCategory as EditCategory (EditCategoryRequest (..))
 import Data.Functor.Identity (Identity)
 import Test.Hspec (describe, it, shouldBe, SpecWith)
+import Fixtures (userAdminAuthor, userNotAdminAuthor, category, categoryRoot)
 
 handle :: Handle Identity
 handle = Handle
@@ -18,49 +19,40 @@ handle = Handle
     getCategoryByParentId = \_ -> pure []
   }
 
-user :: User
-user = User 1 "name" "login" "password" undefined True True
-
 editCategoryRequest :: EditCategoryRequest
 editCategoryRequest = EditCategoryRequest 1 (Just "name") (Just 3)
-
-category :: Category
-category = Category 2 "name" (Just 1)
-
-generalCategory :: Category
-generalCategory = Category 1 "name" Nothing
 
 editCategoryTest :: SpecWith ()
 editCategoryTest =
   describe "Category editing tests" $ do
     it "Should successfuly edit category when requested by admin" $ do
-      let res = editCategoryHandler handle user editCategoryRequest {EditCategory.parentCategoryId = Just 5}
+      let res = editCategoryHandler handle userAdminAuthor editCategoryRequest {EditCategory.parentCategoryId = Just 5}
       res `shouldBe` pure Success
     it "Should successfuly edit general category when requested by admin" $ do
-      let res = editCategoryHandler handle {getCategoryById = \_ -> pure [generalCategory]} user editCategoryRequest {EditCategory.parentCategoryId = Nothing}
+      let res = editCategoryHandler handle {getCategoryById = \_ -> pure [categoryRoot]} userAdminAuthor editCategoryRequest {EditCategory.parentCategoryId = Nothing}
       res `shouldBe` pure Success
     it "Should return bad request in case category with such id does not exist" $ do
-      let res = editCategoryHandler handle {getCategoryById = \_ -> pure []} user editCategoryRequest
+      let res = editCategoryHandler handle {getCategoryById = \_ -> pure []} userAdminAuthor editCategoryRequest
       res `shouldBe` pure CategoryNotExist
     it "Should return bad request in case general category with such name already exists" $ do
-      let res = editCategoryHandler handle {getCategoryById = \_ -> pure [generalCategory], getGeneralCategoryByName = \_ -> pure [category]} user editCategoryRequest {EditCategory.parentCategoryId = Nothing}
+      let res = editCategoryHandler handle {getCategoryById = \_ -> pure [categoryRoot], getGeneralCategoryByName = \_ -> pure [category]} userAdminAuthor editCategoryRequest {EditCategory.parentCategoryId = Nothing}
       res `shouldBe` pure NameIsTaken
     it "Should return bad request in case parent category with such id does not exist" $ do
       let handleCase = handle
-            { getCategoryById = \id -> if id == 1 then pure [generalCategory] else pure []
+            { getCategoryById = \id -> if id == 1 then pure [categoryRoot] else pure []
             } 
-      let res = editCategoryHandler handleCase user editCategoryRequest
+      let res = editCategoryHandler handleCase userAdminAuthor editCategoryRequest
       res `shouldBe` pure ParentCategoryNotExist
     it "Should return bad request in case category with such name already exists" $ do
-      let res = editCategoryHandler handle {getCategoryByNameAndParent = \_ _ -> pure [category]} user editCategoryRequest
+      let res = editCategoryHandler handle {getCategoryByNameAndParent = \_ _ -> pure [category]} userAdminAuthor editCategoryRequest
       res `shouldBe` pure NameIsTaken
     it "Should return not found in case user not an admin" $ do
-      let res = editCategoryHandler handle user {isAdmin = False} editCategoryRequest
+      let res = editCategoryHandler handle userNotAdminAuthor editCategoryRequest
       res `shouldBe` pure NotFound
     it "Should return bad request in case category id equal parent category id" $ do
-      let res = editCategoryHandler handle user editCategoryRequest {EditCategory.parentCategoryId = Just 1}
+      let res = editCategoryHandler handle userAdminAuthor editCategoryRequest {EditCategory.parentCategoryId = Just 1}
       res `shouldBe` pure IllegalParentCategoryId
     it "Should return bad request in case parent category id is invalid" $ do
-      let res = editCategoryHandler handle {getCategoryByParentId = \[1] -> pure [category {Category.categoryId = 1}]} user editCategoryRequest {EditCategory.parentCategoryId = Just 1}
+      let res = editCategoryHandler handle {getCategoryByParentId = \[1] -> pure [category {Category.categoryId = 1}]} userAdminAuthor editCategoryRequest {EditCategory.parentCategoryId = Just 1}
       res `shouldBe` pure IllegalParentCategoryId
     

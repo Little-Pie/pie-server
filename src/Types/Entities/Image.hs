@@ -10,6 +10,7 @@ data Image = Image {imageId :: Int
                    ,base64Image :: String
                    ,contentType :: String
                    }
+  deriving (Eq, Show)
 
 instance ToJSON Image where
   toJSON (Image imageId base64Image postId contentType) = object ["imageId" .= imageId

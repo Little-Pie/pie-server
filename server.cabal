@@ -40,6 +40,7 @@ library
       Endpoints.Handlers.CreateUser
       Endpoints.Handlers.EditCategory
       Endpoints.Handlers.EditPost
+      Endpoints.Handlers.GetImageById
       Helpers
       Routing
       Types.API.CreateCategory
@@ -47,7 +48,6 @@ library
       Types.API.CreateUser
       Types.API.EditCategory
       Types.API.EditPost
-      Types.API.GetImageById
       Types.API.PostWithImages
       Types.Entities.Category
       Types.Entities.GetPosts
@@ -107,6 +107,7 @@ test-suite server-test
       Endpoints.CreateUser
       Endpoints.EditCategory
       Endpoints.EditPost
+      Endpoints.GetImageById
       Fixtures
       Paths_server
   hs-source-dirs:
