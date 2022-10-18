@@ -6,7 +6,7 @@ import Endpoints.Handlers.GetImageById (GetImageByIdResult (..), Handle (..), ge
 import Types.Entities.Image (Image (..))
 import Data.Functor.Identity (Identity (..))
 import Fixtures (image)
-import Test.Hspec (describe, it, shouldBe, shouldSatisfy, SpecWith)
+import Test.Hspec (SpecWith, describe, it, shouldBe, shouldSatisfy)
 
 handle :: Handle Identity
 handle = Handle

@@ -2,7 +2,7 @@
 
 module Types.API.EditCategory where
 
-import Data.Aeson 
+import Data.Aeson (FromJSON, Value(..), parseJSON, (.:), (.:?))
 
 data EditCategoryRequest = EditCategoryRequest {categoryId :: Int
                                                ,name :: Maybe String

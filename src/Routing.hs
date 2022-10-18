@@ -6,27 +6,18 @@ import qualified DbQuery.User as DBU
 import qualified DbQuery.Post as DBP
 import qualified DbQuery.Category as DBC
 import qualified DbQuery.Image as DBI
-import Helpers
+import Helpers (Config(..), lookup', responseOk, responseBadRequest, responseNotFound, withParsedRequest, withAuthorization, getQueryFilters)
 import qualified Types.API.PostWithImages as API
-import Types.Entities.Post
-import Types.Entities.User
-import qualified Types.Entities.Image as I
+import qualified Types.Entities.Image as Image
 import qualified Types.Entities.GetPosts as GP
-import Endpoints.CreateCategory
-import Endpoints.EditPost
-import Endpoints.EditCategory
-import Endpoints.CreateUser
-import Endpoints.CreatePost
-import Endpoints.GetImageById
-import Control.Monad
+import Endpoints (createUser, createCategory, createPost, editCategory, editPost, getImageById)
 import Data.Maybe (fromMaybe)
 import Text.Read (readMaybe)
-import Network.Wai (requestHeaders,Application,lazyRequestBody,rawPathInfo,rawQueryString,requestMethod,queryString)
-import Network.HTTP.Types (methodGet,methodPost,Header,RequestHeaders)
+import Network.Wai (Application, requestHeaders, lazyRequestBody, rawPathInfo, rawQueryString, requestMethod, queryString)
+import Network.HTTP.Types (Header, RequestHeaders, methodGet, methodPost)
 import qualified Data.ByteString.Lazy.Char8 as LBSC
 import qualified Data.ByteString.Char8 as BS
-import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.Types (Query(..))
+import Database.PostgreSQL.Simple (Connection)
 import Data.Aeson.Encode.Pretty (encodePretty)
 
 application :: Connection -> Config -> Application
@@ -72,14 +63,14 @@ application conn config req respond
         response <- getImageById conn imageId'
         respond response
   | path == "categories" = do
-    let (mbLimit, mbOffset) = (join $ readMaybe . BS.unpack <$> lookup' "limit" queryItems :: Maybe Int, join $ readMaybe . BS.unpack <$> lookup' "offset" queryItems :: Maybe Int)
+    let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
     let cfgLimit = limit config
     let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
     let offset' = fromMaybe (offset config) mbOffset
     categories <- DBC.showCategories conn limit' offset'
     respond $ responseOk $ encodePretty categories
   | path == "users" = do
-    let (mbLimit, mbOffset) = (join $ readMaybe . BS.unpack <$> lookup' "limit" queryItems :: Maybe Int, join $ readMaybe . BS.unpack <$> lookup' "offset" queryItems :: Maybe Int)
+    let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
     let cfgLimit = limit config
     let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
     let offset' = fromMaybe (offset config) mbOffset
@@ -88,7 +79,7 @@ application conn config req respond
   | path == "posts" = do
     let queryFilters = getQueryFilters queryItems
     let mbQuerySortBy = lookup' "sortBy" queryItems
-    let (mbLimit, mbOffset) = (join $ readMaybe . BS.unpack <$> lookup' "limit" queryItems :: Maybe Int, join $ readMaybe . BS.unpack <$> lookup' "offset" queryItems :: Maybe Int)
+    let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
     let cfgLimit = limit config
     let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
     let offset' = fromMaybe (offset config) mbOffset
@@ -112,7 +103,7 @@ application conn config req respond
             then Just bStr
             else getBase64LoginAndPassword xs
 
-        mkPostsWithImages :: [GP.GetPosts] -> [I.Image] -> [API.PostWithImages]
+        mkPostsWithImages :: [GP.GetPosts] -> [Image.Image] -> [API.PostWithImages]
         mkPostsWithImages [] _ = []
         mkPostsWithImages (post:posts) images = API.PostWithImages
           (GP.postId post)
@@ -124,4 +115,4 @@ application conn config req respond
           (GP.isPublished post)
           (GP.authorName post)
           (GP.categoryName post)
-          ((map (("http://localhost:4000/getImageById?id=" <>) . show . I.imageId) $ filter (\image -> I.postId image == GP.postId post) images)) : mkPostsWithImages posts images
+          (map (("http://localhost:4000/getImageById?id=" <>) . show . Image.imageId) $ filter (\image -> Image.postId image == GP.postId post) images) : mkPostsWithImages posts images

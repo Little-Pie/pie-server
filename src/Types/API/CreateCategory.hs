@@ -2,7 +2,7 @@
 
 module Types.API.CreateCategory where
 
-import Data.Aeson 
+import Data.Aeson (FromJSON, Value(..), parseJSON, (.:), (.:?))
 
 data CreateCategoryRequest = CreateCategoryRequest {name :: String
                                                    ,parentCategoryId :: Maybe Int

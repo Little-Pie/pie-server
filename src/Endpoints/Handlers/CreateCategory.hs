@@ -40,4 +40,3 @@ createCategoryHandler Handle {..} user CreateCategoryRequest {..} =
                 pure Success
               _ -> pure NameIsTaken
     else pure NotFound
-

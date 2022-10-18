@@ -25,5 +25,3 @@ createPostHandler Handle {..} author CreatePostRequest {..} =
           insertNewPost title text categoryId (U.userId author) isPublished base64Images contentTypes
           pure Success
     else pure NotAuthor
-
-

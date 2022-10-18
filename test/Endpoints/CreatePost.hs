@@ -8,7 +8,7 @@ import Types.Entities.Category (Category (..))
 import Types.Entities.Post (Post (..))
 import Types.API.CreatePost (CreatePostRequest (..))
 import Data.Functor.Identity (Identity)
-import Test.Hspec (describe, it, shouldBe, SpecWith)
+import Test.Hspec (SpecWith, describe, it, shouldBe)
 import Fixtures (userAdminAuthor, userAdminNotAuthor, category)
 
 handle :: Handle Identity
@@ -32,4 +32,3 @@ createPostTest =
     it "Should return bad request in case user not an author" $ do
       let res = createPostHandler handle userAdminNotAuthor {Types.Entities.User.isAuthor = False} createPostRequest
       res `shouldBe` pure NotAuthor
-

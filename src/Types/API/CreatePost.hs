@@ -2,7 +2,7 @@
 
 module Types.API.CreatePost where
 
-import Data.Aeson 
+import Data.Aeson (FromJSON, Value(..), parseJSON, (.:))
 
 data CreatePostRequest = CreatePostRequest {title :: String
                                            ,text :: String

@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Types.Entities.Post where
 
-import Data.Aeson 
-import Database.PostgreSQL.Simple.FromRow
+import Data.Aeson (ToJSON, object, toJSON, (.=))
+import Database.PostgreSQL.Simple.FromRow (FromRow, fromRow, field)
 import Data.Time.Clock (UTCTime)
 
 data Post = Post {postId :: Int
@@ -16,14 +17,14 @@ data Post = Post {postId :: Int
                  }
 
 instance ToJSON Post where
-  toJSON (Post postId title text categoryId createdAt authorId isPublished) = object ["id" .= postId
-                                                                                     ,"title" .= title
-                                                                                     ,"createdAt" .= createdAt
-                                                                                     ,"text" .= text
-                                                                                     ,"categoryId" .= categoryId
-                                                                                     ,"author" .= authorId
-                                                                                     ,"isPublished" .= isPublished
-                                                                                     ]
+  toJSON (Post {..}) = object ["id" .= postId
+                              ,"title" .= title
+                              ,"createdAt" .= createdAt
+                              ,"text" .= text
+                              ,"categoryId" .= categoryId
+                              ,"author" .= authorId
+                              ,"isPublished" .= isPublished
+                              ]
 
 instance FromRow Post where
   fromRow = Post <$> field <*> field <*> field <*> field <*> field <*> field <*> field

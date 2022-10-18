@@ -2,8 +2,8 @@
 
 module DbQuery.User where
 
-import Types.Entities.User
-import Database.PostgreSQL.Simple
+import Types.Entities.User (User)
+import Database.PostgreSQL.Simple (Connection, Only(..), query_, query, execute)
 
 getUsers :: Connection -> IO [User]
 getUsers conn = query_ conn "select * from users"

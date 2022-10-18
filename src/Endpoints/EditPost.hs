@@ -7,9 +7,9 @@ import qualified DbQuery.Post as DBP
 import Types.Entities.User (User)
 import Types.API.EditPost (EditPostRequest)
 import Database.PostgreSQL.Simple (Connection)
-import Helpers (responseOk,responseBadRequest,responseNotFound)
+import Helpers (responseOk, responseBadRequest, responseNotFound)
 import Network.Wai (Response)
-import Endpoints.Handlers.EditPost (Handle(..),EditPostResult(..),editPostHandler)
+import Endpoints.Handlers.EditPost (Handle(..), EditPostResult(..), editPostHandler)
 
 editPost :: Connection -> User -> EditPostRequest -> IO Response
 editPost conn user req = do

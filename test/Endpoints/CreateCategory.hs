@@ -7,7 +7,7 @@ import Types.Entities.User (User (..))
 import Types.Entities.Category (Category (..))
 import Types.API.CreateCategory (CreateCategoryRequest (..))
 import Data.Functor.Identity (Identity)
-import Test.Hspec (describe, it, shouldBe, SpecWith)
+import Test.Hspec (SpecWith, describe, it, shouldBe)
 import Fixtures (userAdminAuthor,userNotAdminAuthor, category)
 
 handle :: Handle Identity

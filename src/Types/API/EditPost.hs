@@ -2,7 +2,7 @@
 
 module Types.API.EditPost where
 
-import Data.Aeson 
+import Data.Aeson (FromJSON, Value(..), parseJSON, (.:), (.:?))
 
 data EditPostRequest = EditPostRequest {postId :: Int
                                        ,title :: Maybe String

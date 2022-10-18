@@ -2,7 +2,7 @@
 
 module Types.API.CreateUser where
 
-import Data.Aeson 
+import Data.Aeson (FromJSON, Value(..), parseJSON, (.:))
 
 data CreateUserRequest = CreateUserRequest {name :: String
                                            ,login :: String

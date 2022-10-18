@@ -7,7 +7,7 @@ import qualified DbQuery.User as DB
 import qualified Types.API.CreateUser as API
 import Network.Wai (Response)
 import Database.PostgreSQL.Simple (Connection)
-import Helpers (responseOk,responseBadRequest,responseNotFound)
+import Helpers (responseOk, responseBadRequest, responseNotFound)
 import Endpoints.Handlers.CreateUser (CreateUserResult (..), Handle (..), createUserHandler)
 
 createUser :: Connection -> User -> API.CreateUserRequest -> IO Response

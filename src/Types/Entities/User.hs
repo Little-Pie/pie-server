@@ -3,8 +3,8 @@
 
 module Types.Entities.User where
 
-import Data.Aeson 
-import Database.PostgreSQL.Simple.FromRow
+import Data.Aeson (ToJSON, object, toJSON, (.=))
+import Database.PostgreSQL.Simple.FromRow (FromRow, fromRow, field)
 import Data.Time.Clock (UTCTime)
 
 data User = User {userId :: Int

@@ -2,8 +2,8 @@
 
 module DbQuery.Image where
 
-import Types.Entities.Image
-import Database.PostgreSQL.Simple
+import Types.Entities.Image (Image)
+import Database.PostgreSQL.Simple (Connection, Only(..), query)
 
 getImageById :: Connection -> Int -> IO [Image]
 getImageById conn imageId =

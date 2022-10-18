@@ -7,7 +7,7 @@ import Types.Entities.User (User (..))
 import Types.Entities.Category as Category (Category (..))
 import Types.API.EditCategory as EditCategory (EditCategoryRequest (..))
 import Data.Functor.Identity (Identity)
-import Test.Hspec (describe, it, shouldBe, SpecWith)
+import Test.Hspec (SpecWith, describe, it, shouldBe)
 import Fixtures (userAdminAuthor, userNotAdminAuthor, category, categoryRoot)
 
 handle :: Handle Identity
@@ -55,4 +55,3 @@ editCategoryTest =
     it "Should return bad request in case parent category id is invalid" $ do
       let res = editCategoryHandler handle {getCategoryByParentId = \[1] -> pure [category {Category.categoryId = 1}]} userAdminAuthor editCategoryRequest {EditCategory.parentCategoryId = Just 1}
       res `shouldBe` pure IllegalParentCategoryId
-    

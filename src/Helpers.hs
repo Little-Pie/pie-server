@@ -3,17 +3,16 @@
 
 module Helpers where
 
-import Types.Entities.Post
-import Types.Entities.User
-import DbQuery.User
+import Types.Entities.User (User(..))
+import DbQuery.User (getUserByLogin)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC
-import Data.Aeson
+import Data.Aeson (Value(..), FromJSON, decode, decodeStrict, parseJSON, (.:))
 import qualified Data.ByteString.Base64 as BASE
-import Network.HTTP.Types (toQuery,statusCode,methodGet,methodPost,status200,hContentType,Status,status500,notFound404,badRequest400,unauthorized401,QueryItem,Query)
-import Network.Wai (lazyRequestBody,Middleware, responseStatus,responseLBS,Application,rawPathInfo,rawQueryString,requestMethod,Response,queryString)
-import Database.PostgreSQL.Simple as Simple (connect,Only(..),Connection,query,query_,ConnectInfo(..),defaultConnectInfo)
+import Network.HTTP.Types (Status, Query, statusCode, status200, hContentType, status500, notFound404, badRequest400, unauthorized401)
+import Network.Wai (Middleware, Response, responseStatus, responseLBS, rawPathInfo, rawQueryString)
+import Database.PostgreSQL.Simple as PSQL (ConnectInfo(..), Only(..), Connection, defaultConnectInfo)
 
 data Config = Config {limit :: Int
                      ,offset :: Int
@@ -42,10 +41,10 @@ getConfig = do
 
 localPG :: Config -> ConnectInfo
 localPG Config {..} = defaultConnectInfo
-        { Simple.connectHost = connectHost
-        , Simple.connectDatabase = connectDatabase
-        , Simple.connectUser = connectUser
-        , Simple.connectPassword = connectPassword
+        { PSQL.connectHost = connectHost
+        , PSQL.connectDatabase = connectDatabase
+        , PSQL.connectUser = connectUser
+        , PSQL.connectPassword = connectPassword
         }
 
 authorize :: Connection -> Maybe BS.ByteString -> IO (LBS.ByteString,Maybe User)

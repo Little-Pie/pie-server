@@ -2,8 +2,8 @@
 
 module DbQuery.Category where
 
-import Types.Entities.Category
-import Database.PostgreSQL.Simple
+import Types.Entities.Category (Category)
+import Database.PostgreSQL.Simple (Connection, Query, Only(..), query, execute)
 
 getCategoryById :: Connection -> Int -> IO [Category]
 getCategoryById conn categoryId =

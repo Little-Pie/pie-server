@@ -29,6 +29,7 @@ library
       DbQuery.Image
       DbQuery.Post
       DbQuery.User
+      Endpoints
       Endpoints.CreateCategory
       Endpoints.CreatePost
       Endpoints.CreateUser

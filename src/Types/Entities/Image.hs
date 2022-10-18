@@ -1,23 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Types.Entities.Image where
 
-import Data.Aeson 
-import Database.PostgreSQL.Simple.FromRow
+import Data.Aeson (ToJSON, toJSON, object, (.=))
+import Database.PostgreSQL.Simple.FromRow (FromRow, fromRow, field)
 
-data Image = Image {imageId :: Int
-                   ,postId :: Int
-                   ,base64Image :: String
-                   ,contentType :: String
-                   }
+data Image = Image
+  { imageId :: Int,
+    postId :: Int,
+    base64Image :: String,
+    contentType :: String
+  }
   deriving (Eq, Show)
 
 instance ToJSON Image where
-  toJSON (Image imageId base64Image postId contentType) = object ["imageId" .= imageId
-                                                                 ,"base64Image" .= base64Image
-                                                                 ,"postId" .= postId
-                                                                 ,"contentType" .= contentType
-                                                                 ]
+  toJSON (Image {..}) =
+    object
+      [ "imageId" .= imageId,
+        "postId" .= postId,
+        "base64Image" .= base64Image,
+        "contentType" .= contentType
+      ]
 
 instance FromRow Image where
   fromRow = Image <$> field <*> field <*> field <*> field

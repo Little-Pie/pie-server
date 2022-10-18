@@ -2,12 +2,10 @@
 
 module Main where
 
-import Routing
-import Helpers
+import Routing (application)
+import Helpers (getConfig, localPG, withLogging)
 import Network.Wai.Handler.Warp (run)
-import Network.Wai (Application)
-import Database.PostgreSQL.Simple
-import Data.Time.Clock
+import Database.PostgreSQL.Simple (connect, close)
 
 main :: IO ()
 main = do

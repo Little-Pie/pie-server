@@ -3,14 +3,11 @@
 
 module DbQuery.Post where
 
-import Types.Entities.Post
-import Types.Entities.GetPosts
+import Types.Entities.Post (Post)
+import Types.Entities.GetPosts (GetPosts)
 import qualified Data.ByteString.Char8 as BS
-import Types.Entities.Category
-import Database.PostgreSQL.Simple
-import qualified Data.ByteString.Lazy as LBS
+import Database.PostgreSQL.Simple (Connection, Only(..), execute, executeMany, query, returning)
 import Database.PostgreSQL.Simple.Types (Query(..))
-import Data.Maybe (fromMaybe)
 
 insertNewPost :: Connection -> String -> String -> Int -> Int -> Bool -> [String] -> [String] -> IO ()
 insertNewPost conn title text categoryId userId isPublished base64Images contentTypes = do
@@ -60,6 +57,6 @@ createFilterDBReq filt filterParam = case filt of
   "title" -> " AND title like '%" <> Query filterParam <> "%' "
   "text" -> " AND text like '%" <> Query filterParam <> "%' "
 
-showPosts :: Connection -> Int -> Int -> [(BS.ByteString, BS.ByteString)] -> (Maybe BS.ByteString) -> IO [GetPosts]
+showPosts :: Connection -> Int -> Int -> [(BS.ByteString, BS.ByteString)] -> Maybe BS.ByteString -> IO [GetPosts]
 showPosts conn limit' offset' queryFilters mbQuerySortBy =
   query conn (initQuery <> getFilterBy queryFilters <> getSortBy mbQuerySortBy <> " limit (?) offset (?)") (limit', offset')

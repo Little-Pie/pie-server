@@ -7,7 +7,7 @@ import qualified DbQuery.Post as DBP
 import qualified Types.Entities.User as U
 import qualified Types.API.CreatePost as API
 import Database.PostgreSQL.Simple (Connection)
-import Helpers (responseOk,responseBadRequest)
+import Helpers (responseOk, responseBadRequest)
 import Network.Wai (Response)
 import Endpoints.Handlers.CreatePost (CreatePostResult (..), Handle (..), createPostHandler)
 
@@ -23,4 +23,3 @@ createPost conn author req = do
       {getCategoryById = DBC.getCategoryById conn,
        insertNewPost = DBP.insertNewPost conn
       }
-

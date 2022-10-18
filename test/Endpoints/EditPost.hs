@@ -8,7 +8,7 @@ import Types.Entities.Category (Category (..))
 import Types.Entities.Post (Post (..))
 import Types.API.EditPost (EditPostRequest (..))
 import Data.Functor.Identity (Identity)
-import Test.Hspec (describe, it, shouldBe, SpecWith)
+import Test.Hspec (SpecWith, describe, it, shouldBe)
 import Fixtures (category,userAdminAuthor,userAdminNotAuthor,post)
 
 handle :: Handle Identity

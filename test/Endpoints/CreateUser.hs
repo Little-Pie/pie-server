@@ -6,7 +6,7 @@ import Endpoints.Handlers.CreateUser (CreateUserResult (..), Handle (..), create
 import Types.Entities.User (User (..))
 import Types.API.CreateUser (CreateUserRequest (..))
 import Data.Functor.Identity (Identity)
-import Test.Hspec (describe, it, shouldBe, SpecWith)
+import Test.Hspec (SpecWith, describe, it, shouldBe)
 import Fixtures (userAdminAuthor, userNotAdminAuthor)
 
 handle :: Handle Identity
