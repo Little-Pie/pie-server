@@ -26,7 +26,7 @@ editPost conn title text categoryId postId isPublished base64Images contentTypes
     [] -> pure ()
     _ -> do
       let imageRows = zipWith (postId,,) base64Images contentTypes
-      execute conn "DELETE FROM images WHERE postId = (?)" (Only postId)
+      execute conn "DELETE FROM images WHERE \"postId\" = (?)" (Only postId)
       executeMany conn "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)" imageRows
       pure ()
 
