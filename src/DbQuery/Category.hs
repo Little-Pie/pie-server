@@ -43,5 +43,5 @@ getCategoryByParentId conn ids = do
   where
     mkQuery :: [Int] -> Query
     mkQuery [] = ""
-    mkQuery [x] = " parentId = (?)"
-    mkQuery (x:xs) = " parentId = (?) OR "
+    mkQuery [x] = " \"parentId\" = (?)"
+    mkQuery (x:xs) = " \"parentId\" = (?) OR "

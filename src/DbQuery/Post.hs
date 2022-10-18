@@ -21,7 +21,7 @@ insertNewPost conn title text categoryId userId isPublished base64Images content
 
 editPost :: Connection -> String -> String -> Int -> Int -> Bool -> [String] -> [String] -> IO ()
 editPost conn title text categoryId postId isPublished base64Images contentTypes = do
-  execute conn "UPDATE posts SET (title,text,\"isPublished\",\"categoryId\") = (?,?,?) WHERE id = (?)" (title, text, isPublished, categoryId, postId)
+  execute conn "UPDATE posts SET (title,text,\"isPublished\",\"categoryId\") = (?,?,?,?) WHERE id = (?)" (title, text, isPublished, categoryId, postId)
   case base64Images of
     [] -> pure ()
     _ -> do
