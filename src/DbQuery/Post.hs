@@ -16,7 +16,7 @@ insertNewPost conn title text categoryId userId isPublished base64Images content
     [] -> putStrLn "Something went wrong: post wasn't created"
     (postId:_) -> do
       let imageRows = zipWith (postId,,) base64Images contentTypes
-      executeMany conn "INSERT INTO images (postId,base64Image,contentType) VALUES (?,?,?)" imageRows
+      executeMany conn "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)" imageRows
       pure ()
 
 editPost :: Connection -> String -> String -> Int -> Int -> Bool -> [String] -> [String] -> IO ()
@@ -27,7 +27,7 @@ editPost conn title text categoryId postId isPublished base64Images contentTypes
     _ -> do
       let imageRows = zipWith (postId,,) base64Images contentTypes
       execute conn "DELETE FROM images WHERE postId = (?)" (Only postId)
-      executeMany conn "INSERT INTO images (postId,base64Image,contentType) VALUES (?,?,?)" imageRows
+      executeMany conn "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)" imageRows
       pure ()
 
 getPostById :: Connection -> Int -> IO [Post]
