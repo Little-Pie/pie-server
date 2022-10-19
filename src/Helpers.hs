@@ -3,6 +3,8 @@
 
 module Helpers where
 
+import Config (Config(..))
+import Logging (LoggingLevel(..))
 import Types.Entities.User (User(..))
 import DbQuery.User (getUserByLogin)
 import qualified Data.ByteString.Char8 as BS
@@ -12,32 +14,27 @@ import Data.Aeson (Value(..), FromJSON, decode, decodeStrict, parseJSON, (.:))
 import qualified Data.ByteString.Base64 as BASE
 import Network.HTTP.Types (Status, Query, statusCode, status200, hContentType, status500, notFound404, badRequest400, unauthorized401)
 import Network.Wai (Middleware, Response, responseStatus, responseLBS, rawPathInfo, rawQueryString)
-import Database.PostgreSQL.Simple as PSQL (ConnectInfo(..), Only(..), Connection, defaultConnectInfo)
+import Database.PostgreSQL.Simple as PSQL (ConnectInfo(..), Only(..), Connection, execute_, defaultConnectInfo)
 
-data Config = Config {limit :: Int
-                     ,offset :: Int
-                     ,connectHost :: String
-                     ,connectDatabase :: String
-                     ,connectUser :: String
-                     ,connectPassword :: String
-                     }
+printLogDebug :: Config -> String -> IO ()
+printLogDebug Config {..} str = case loggingLevel of
+  Debug -> putStrLn str
+  Warning -> putStrLn str
+  Error -> putStrLn str
+  _ -> pure ()
 
-instance FromJSON Config where
-  parseJSON (Object config) = Config <$>
-                              config .: "limit" <*>
-                              config .: "offset" <*>
-                              config .: "connectHost" <*>
-                              config .: "connectDatabase" <*>
-                              config .: "connectUser" <*>
-                              config .: "connectPassword"
+printLogError :: Config -> String -> IO ()
+printLogError Config {..} str = case loggingLevel of
+  Error -> putStrLn str
+  _ -> pure ()
 
-getConfig :: IO (Maybe Config)
-getConfig = do
-  rawJSON <- BS.readFile "config.json"
-  let result = decodeStrict rawJSON :: Maybe Config
-  case result of
-    Nothing -> return Nothing
-    Just conf -> return $ Just conf
+dropTables :: Connection -> IO ()
+dropTables conn = do
+  execute_ conn "drop table if exists users"
+  execute_ conn "drop table if exists posts"
+  execute_ conn "drop table if exists categories"
+  execute_ conn "drop table if exists images"
+  pure ()
 
 localPG :: Config -> ConnectInfo
 localPG Config {..} = defaultConnectInfo

@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Config
       DbQuery.Category
       DbQuery.Image
       DbQuery.Post
@@ -43,6 +44,7 @@ library
       Endpoints.Handlers.EditPost
       Endpoints.Handlers.GetImageById
       Helpers
+      Logging
       Routing
       Types.API.CreateCategory
       Types.API.CreatePost

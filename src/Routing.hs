@@ -6,7 +6,8 @@ import qualified DbQuery.User as DBU
 import qualified DbQuery.Post as DBP
 import qualified DbQuery.Category as DBC
 import qualified DbQuery.Image as DBI
-import Helpers (Config(..), lookup', responseOk, responseBadRequest, responseNotFound, withParsedRequest, withAuthorization, getQueryFilters)
+import Config (Config(..))
+import Helpers (lookup', responseOk, responseBadRequest, responseNotFound, withParsedRequest, withAuthorization, getQueryFilters)
 import qualified Types.API.PostWithImages as API
 import qualified Types.Entities.Image as Image
 import qualified Types.Entities.GetPosts as GP
