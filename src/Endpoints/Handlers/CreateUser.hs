@@ -2,6 +2,7 @@
 
 module Endpoints.Handlers.CreateUser where
 
+import Hash (makeStringHash)
 import Types.API.CreateUser (CreateUserRequest (..))
 import qualified Types.Entities.User as U
 
@@ -20,7 +21,7 @@ createUserHandler Handle {..} user CreateUserRequest {..} =
       mbUser <- getUserByLogin login
       case mbUser of
         [] -> do
-          insertNewUser name login password isAdmin isAuthor
+          insertNewUser name login (makeStringHash password) isAdmin isAuthor
           pure Success
         _ -> pure LoginIsTaken
     else pure NotFound

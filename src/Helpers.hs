@@ -11,6 +11,7 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC
 import Database.PostgreSQL.Simple as PSQL (ConnectInfo (..), Connection, Only (..), defaultConnectInfo, execute_)
 import DbQuery.User (getUserByLogin)
+import Hash (makeStringHash)
 import Logging (LoggingLevel (..))
 import Network.HTTP.Types (Query, Status, badRequest400, hContentType, notFound404, status200, status500, statusCode, unauthorized401)
 import Network.Wai (Middleware, Response, rawPathInfo, rawQueryString, responseLBS, responseStatus)
@@ -67,12 +68,13 @@ authorize conn mbBase64LoginAndPassword = case mbBase64LoginAndPassword of
     Left err -> pure (LBSC.pack err, Nothing)
     Right loginPassword -> do
       let login' = BS.takeWhile (/= ':') loginPassword
+      let password' = BS.drop 1 $ BS.dropWhile (/= ':') loginPassword
       users <- getUserByLogin conn (BS.unpack login')
       case users of
         [] -> pure ("Wrong login", Nothing)
         [user] -> do
           let loginPassword' = BS.pack $ login user ++ ":" ++ password user
-          if loginPassword == loginPassword'
+          if login' <> ":" <> BS.pack (makeStringHash $ BS.unpack password') == loginPassword'
             then pure ("User is authorized", Just user)
             else pure ("Wrong password", Nothing)
 

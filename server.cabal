@@ -43,6 +43,7 @@ library
       Endpoints.Handlers.EditCategory
       Endpoints.Handlers.EditPost
       Endpoints.Handlers.GetImageById
+      Hash
       Helpers
       Logging
       Routing
@@ -67,7 +68,6 @@ library
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
-    , containers
     , cryptonite
     , hspec
     , http-types
@@ -90,7 +90,6 @@ executable server-exe
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
-    , containers
     , cryptonite
     , hspec
     , http-types
@@ -122,7 +121,6 @@ test-suite server-test
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
-    , containers
     , cryptonite
     , hspec
     , http-types

@@ -25,7 +25,6 @@ dependencies:
 - http-types
 - warp
 - bytestring
-- containers
 - cryptonite
 - aeson
 - postgresql-simple
