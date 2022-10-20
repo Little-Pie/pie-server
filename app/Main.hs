@@ -1,27 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Main where
 
-import Config (getConfig)
-import Routing (application)
-import Helpers (localPG, withLogging, dropTables, printDebug, printRelease, printWarning, printError)
+import Config (Config (..), Environment (..), getConfig)
+import Database.PostgreSQL.Simple (close, connect)
+import Helpers (dropTables, localPG, printDebug, printError, printRelease, printWarning, withLogging)
 import Network.Wai.Handler.Warp (run)
-import Database.PostgreSQL.Simple (connect, close)
-import System.IO (IOMode(..), hClose, openFile)
+import Routing (application)
+import System.IO (IOMode (..), hClose, openFile)
 
 main :: IO ()
 main = do
   mbConfig <- getConfig
   case mbConfig of
     Nothing -> putStrLn "Couldn't parse config"
-    Just config -> do
+    Just config@Config {..} -> do
       conn <- connect $ localPG config
       --dropTables conn
-      logFile <- openFile "logFile.txt" AppendMode
-      printDebug config logFile "Server port is 4000"
-      printRelease config logFile "Hello"
-      printWarning config logFile "Bye"
-      printError config logFile "Serving..."
-      run 4000 $ withLogging $ application conn config
-      hClose logFile
+      logHandle <- openFile "logFile.txt" AppendMode
+      let env = Environment limit offset conn logHandle loggingLevel
+      printError env "Serving..."
+      run 4000 $ withLogging $ application env
+      hClose logHandle
       close conn

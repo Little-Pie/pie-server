@@ -2,13 +2,13 @@
 
 module Endpoints.CreateCategory where
 
-import qualified DbQuery.Category as DB
-import Types.Entities.User (User)
-import qualified Types.API.CreateCategory as API
 import Database.PostgreSQL.Simple (Connection)
-import Helpers (responseOk, responseBadRequest, responseNotFound)
-import Network.Wai (Response)
+import qualified DbQuery.Category as DB
 import Endpoints.Handlers.CreateCategory (CreateCategoryResult (..), Handle (..), createCategoryHandler)
+import Helpers (responseBadRequest, responseNotFound, responseOk)
+import Network.Wai (Response)
+import qualified Types.API.CreateCategory as API
+import Types.Entities.User (User)
 
 createCategory :: Connection -> User -> API.CreateCategoryRequest -> IO Response
 createCategory conn user req = do
@@ -19,10 +19,11 @@ createCategory conn user req = do
     ParentCategoryNotExist -> pure $ responseBadRequest "Parent category with such id does not exist"
     NotFound -> pure $ responseNotFound ""
   where
-    handle = Handle
-      { getGeneralCategoryByName = DB.getGeneralCategoryByName conn,
-        insertNewGeneralCategory = DB.insertNewGeneralCategory conn,
-        getCategoryByNameAndParent = DB.getCategoryByNameAndParent conn,
-        insertNewCategory = DB.insertNewCategory conn,
-        getCategoryById = DB.getCategoryById conn
-      }
+    handle =
+      Handle
+        { getGeneralCategoryByName = DB.getGeneralCategoryByName conn,
+          insertNewGeneralCategory = DB.insertNewGeneralCategory conn,
+          getCategoryByNameAndParent = DB.getCategoryByNameAndParent conn,
+          insertNewCategory = DB.insertNewCategory conn,
+          getCategoryById = DB.getCategoryById conn
+        }
