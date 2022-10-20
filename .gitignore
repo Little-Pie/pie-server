@@ -3,3 +3,4 @@
 *.vscode
 *.history
 config.json
+logFile.txt

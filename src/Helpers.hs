@@ -15,24 +15,31 @@ import qualified Data.ByteString.Base64 as BASE
 import Network.HTTP.Types (Status, Query, statusCode, status200, hContentType, status500, notFound404, badRequest400, unauthorized401)
 import Network.Wai (Middleware, Response, responseStatus, responseLBS, rawPathInfo, rawQueryString)
 import Database.PostgreSQL.Simple as PSQL (ConnectInfo(..), Only(..), Connection, execute_, defaultConnectInfo)
+import System.IO (Handle, hPutStrLn, hFlush)
 
-printDebug :: Config -> String -> IO ()
-printDebug Config {..} str = if loggingLevel < Release
-  then putStrLn str
+printDebug :: Config -> Handle -> String -> IO ()
+printDebug Config {..} logFile str = if loggingLevel < Release
+  then printLog logFile str
   else pure ()
 
-printRelease :: Config -> String -> IO ()
-printRelease Config {..} str = if loggingLevel < Warning
-  then putStrLn str
+printRelease :: Config -> Handle -> String -> IO ()
+printRelease Config {..} logFile str = if loggingLevel < Warning
+  then printLog logFile str
   else pure ()
 
-printWarning :: Config -> String -> IO ()
-printWarning Config {..} str = if loggingLevel < Error
-  then putStrLn str
+printWarning :: Config -> Handle -> String -> IO ()
+printWarning Config {..} logFile str = if loggingLevel < Error
+  then printLog logFile str
   else pure ()
 
-printError :: Config -> String -> IO ()
-printError Config {..} = putStrLn
+printError :: Config -> Handle -> String -> IO ()
+printError Config {..} = printLog
+
+printLog :: Handle -> String -> IO ()
+printLog logFile str = do
+  hPutStrLn logFile str
+  hFlush logFile
+
 
 dropTables :: Connection -> IO ()
 dropTables conn = do
