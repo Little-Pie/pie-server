@@ -3,7 +3,7 @@
 module Logging where
 
 import Control.Monad (mzero)
-import Data.Aeson (FromJSON (..), Value(String))
+import Data.Aeson (FromJSON (..), Value (String))
 
 data LoggingLevel = Debug | Release | Warning | Error
   deriving (Eq, Ord)

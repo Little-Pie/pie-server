@@ -2,11 +2,11 @@
 
 module Endpoints.Handlers.EditCategory where
 
-import qualified Types.Entities.User as U
-import qualified Types.Entities.Category as C
-import Types.API.EditCategory (EditCategoryRequest (..))
-import Data.Maybe (fromMaybe)
 import Control.Applicative ((<|>))
+import Data.Maybe (fromMaybe)
+import Types.API.EditCategory (EditCategoryRequest (..))
+import qualified Types.Entities.Category as C
+import qualified Types.Entities.User as U
 
 data Handle m = Handle
   { getGeneralCategoryByName :: String -> m [C.Category],
@@ -24,10 +24,12 @@ editCategoryHandler Handle {..} user EditCategoryRequest {..} = do
   categories <- getCategoryById categoryId
   case categories of
     [] -> pure CategoryNotExist
-    (category:_) -> do
-      let newCategory = category {
-      C.name = fromMaybe (C.name category) name,
-      C.parentCategoryId = parentCategoryId <|> C.parentCategoryId category}
+    (category : _) -> do
+      let newCategory =
+            category
+              { C.name = fromMaybe (C.name category) name,
+                C.parentCategoryId = parentCategoryId <|> C.parentCategoryId category
+              }
       if U.isAdmin user
         then case C.parentCategoryId newCategory of
           Nothing -> do
@@ -37,23 +39,24 @@ editCategoryHandler Handle {..} user EditCategoryRequest {..} = do
                 editCategory (C.name newCategory) (C.parentCategoryId category) categoryId
                 pure Success
               _ -> pure NameIsTaken
-          Just parentCategoryId' -> if categoryId == parentCategoryId'
-            then pure IllegalParentCategoryId
-            else do
-              childCategoryIds <- checkChildCategories [categoryId] []
-              if parentCategoryId' `elem` childCategoryIds
-                then pure IllegalParentCategoryId
-                else do
-                  parentCategories <- getCategoryById parentCategoryId'
-                  case parentCategories of
-                    [] -> pure ParentCategoryNotExist
-                    _ -> do
-                      checkCategories <- getCategoryByNameAndParent (C.name newCategory) parentCategoryId'
-                      case checkCategories of
-                        [] -> do
-                          editCategory (C.name newCategory) (C.parentCategoryId newCategory) categoryId
-                          pure Success
-                        _ -> pure NameIsTaken
+          Just parentCategoryId' ->
+            if categoryId == parentCategoryId'
+              then pure IllegalParentCategoryId
+              else do
+                childCategoryIds <- checkChildCategories [categoryId] []
+                if parentCategoryId' `elem` childCategoryIds
+                  then pure IllegalParentCategoryId
+                  else do
+                    parentCategories <- getCategoryById parentCategoryId'
+                    case parentCategories of
+                      [] -> pure ParentCategoryNotExist
+                      _ -> do
+                        checkCategories <- getCategoryByNameAndParent (C.name newCategory) parentCategoryId'
+                        case checkCategories of
+                          [] -> do
+                            editCategory (C.name newCategory) (C.parentCategoryId newCategory) categoryId
+                            pure Success
+                          _ -> pure NameIsTaken
         else pure NotFound
   where
     checkChildCategories [] acc = pure acc

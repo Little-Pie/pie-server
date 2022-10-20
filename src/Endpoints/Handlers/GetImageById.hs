@@ -2,9 +2,9 @@
 
 module Endpoints.Handlers.GetImageById where
 
-import Types.Entities.Image (Image(..))
 import Data.ByteString.Base64 (decode)
 import qualified Data.ByteString.Char8 as BS
+import Types.Entities.Image (Image (..))
 
 newtype Handle m = Handle
   { getImageById :: Int -> m [Image]
@@ -18,7 +18,7 @@ getImageByIdHandler Handle {..} imageId = do
   dbImage <- getImageById imageId
   case dbImage of
     [] -> pure ImageNotExist
-    (image:_) -> case decode $ BS.pack $ base64Image image of
+    (image : _) -> case decode $ BS.pack $ base64Image image of
       Left err -> pure DecodeError
       Right decodedImage -> do
         let contentType' = contentType image

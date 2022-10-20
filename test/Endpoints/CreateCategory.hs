@@ -2,22 +2,23 @@
 
 module Endpoints.CreateCategory where
 
-import Endpoints.Handlers.CreateCategory (CreateCategoryResult (..), Handle (..), createCategoryHandler)
-import Types.Entities.User (User (..))
-import Types.Entities.Category (Category (..))
-import Types.API.CreateCategory (CreateCategoryRequest (..))
 import Data.Functor.Identity (Identity)
+import Endpoints.Handlers.CreateCategory (CreateCategoryResult (..), Handle (..), createCategoryHandler)
+import Fixtures (category, userAdminAuthor, userNotAdminAuthor)
 import Test.Hspec (SpecWith, describe, it, shouldBe)
-import Fixtures (userAdminAuthor,userNotAdminAuthor, category)
+import Types.API.CreateCategory (CreateCategoryRequest (..))
+import Types.Entities.Category (Category (..))
+import Types.Entities.User (User (..))
 
 handle :: Handle Identity
-handle = Handle
-  { getGeneralCategoryByName = \_ -> pure [],
-    insertNewGeneralCategory = \_ -> pure (),
-    getCategoryByNameAndParent = \_ _ -> pure [],
-    insertNewCategory = \_ _ -> pure (),
-    getCategoryById = \_ -> pure [category]
-  }
+handle =
+  Handle
+    { getGeneralCategoryByName = \_ -> pure [],
+      insertNewGeneralCategory = \_ -> pure (),
+      getCategoryByNameAndParent = \_ _ -> pure [],
+      insertNewCategory = \_ _ -> pure (),
+      getCategoryById = \_ -> pure [category]
+    }
 
 createCategoryRequest :: CreateCategoryRequest
 createCategoryRequest = CreateCategoryRequest "name" (Just 1)

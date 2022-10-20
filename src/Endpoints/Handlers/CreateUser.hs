@@ -2,8 +2,8 @@
 
 module Endpoints.Handlers.CreateUser where
 
-import qualified Types.Entities.User as U
 import Types.API.CreateUser (CreateUserRequest (..))
+import qualified Types.Entities.User as U
 
 data Handle m = Handle
   { insertNewUser :: String -> String -> String -> Bool -> Bool -> m (),

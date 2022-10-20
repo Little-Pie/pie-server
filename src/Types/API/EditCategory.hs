@@ -2,14 +2,16 @@
 
 module Types.API.EditCategory where
 
-import Data.Aeson (FromJSON, Value(..), parseJSON, (.:), (.:?))
+import Data.Aeson (FromJSON, Value (..), parseJSON, (.:), (.:?))
 
-data EditCategoryRequest = EditCategoryRequest {categoryId :: Int
-                                               ,name :: Maybe String
-                                               ,parentCategoryId :: Maybe Int
-                                               }
+data EditCategoryRequest = EditCategoryRequest
+  { categoryId :: Int,
+    name :: Maybe String,
+    parentCategoryId :: Maybe Int
+  }
 
 instance FromJSON EditCategoryRequest where
-  parseJSON (Object editCategoryRequest) = EditCategoryRequest <$> editCategoryRequest .: "categoryId"
-                                                               <*> editCategoryRequest .:? "name"
-                                                               <*> editCategoryRequest .:? "parentCategoryId"
+  parseJSON (Object editCategoryRequest) =
+    EditCategoryRequest <$> editCategoryRequest .: "categoryId"
+      <*> editCategoryRequest .:? "name"
+      <*> editCategoryRequest .:? "parentCategoryId"

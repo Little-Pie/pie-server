@@ -2,8 +2,8 @@
 
 module DbQuery.User where
 
+import Database.PostgreSQL.Simple (Connection, Only (..), execute, query, query_)
 import Types.Entities.User (User)
-import Database.PostgreSQL.Simple (Connection, Only(..), query_, query, execute)
 
 getUsers :: Connection -> IO [User]
 getUsers conn = query_ conn "select * from users"
@@ -13,7 +13,7 @@ getUserByLogin conn login = query conn "SELECT * FROM users WHERE login=(?)" (On
 
 insertNewUser :: Connection -> String -> String -> String -> Bool -> Bool -> IO ()
 insertNewUser conn name login password isAdmin isAuthor = do
-  execute conn "INSERT INTO users (name,login,password,\"isAdmin\",\"isAuthor\") VALUES (?,?,?,?,?)" (name,login,password,isAdmin,isAuthor)
+  execute conn "INSERT INTO users (name,login,password,\"isAdmin\",\"isAuthor\") VALUES (?,?,?,?,?)" (name, login, password, isAdmin, isAuthor)
   pure ()
 
 showUsers :: Connection -> Int -> Int -> IO [User]

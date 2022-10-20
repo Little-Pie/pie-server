@@ -4,17 +4,18 @@
 module Types.Entities.Category where
 
 import Data.Aeson (ToJSON, object, toJSON, (.=))
-import Database.PostgreSQL.Simple.FromRow (FromRow, fromRow, field)
 import Data.Time.Clock (UTCTime)
+import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
 
-data Category = Category {categoryId :: Int
-                         ,name :: String
-                         ,parentCategoryId :: Maybe Int
-                         }
+data Category = Category
+  { categoryId :: Int,
+    name :: String,
+    parentCategoryId :: Maybe Int
+  }
 
 instance ToJSON Category where
-  toJSON (Category {..}) = 
-    object 
+  toJSON (Category {..}) =
+    object
       [ "categoryId" .= categoryId,
         "name" .= name,
         "parentCategoryId" .= parentCategoryId

@@ -2,13 +2,13 @@
 
 module Endpoints.EditCategory where
 
+import Database.PostgreSQL.Simple (Connection)
 import qualified DbQuery.Category as DB
+import Endpoints.Handlers.EditCategory (EditCategoryResult (..), Handle (..), editCategoryHandler)
+import Helpers (responseBadRequest, responseNotFound, responseOk)
+import Network.Wai (Response)
 import Types.API.EditCategory (EditCategoryRequest)
 import Types.Entities.User (User)
-import Database.PostgreSQL.Simple (Connection)
-import Helpers (responseOk, responseBadRequest, responseNotFound)
-import Network.Wai (Response)
-import Endpoints.Handlers.EditCategory (EditCategoryResult(..), Handle(..), editCategoryHandler)
 
 editCategory :: Connection -> User -> EditCategoryRequest -> IO Response
 editCategory conn user req = do
@@ -21,10 +21,11 @@ editCategory conn user req = do
     ParentCategoryNotExist -> pure $ responseBadRequest "Parent category with such id does not exist"
     NotFound -> pure $ responseNotFound ""
   where
-    handle = Handle
-      { getGeneralCategoryByName = DB.getGeneralCategoryByName conn,
-        getCategoryByNameAndParent = DB.getCategoryByNameAndParent conn,
-        Endpoints.Handlers.EditCategory.editCategory = DB.editCategory conn,
-        getCategoryById = DB.getCategoryById conn,
-        getCategoryByParentId = DB.getCategoryByParentId conn
-      }
+    handle =
+      Handle
+        { getGeneralCategoryByName = DB.getGeneralCategoryByName conn,
+          getCategoryByNameAndParent = DB.getCategoryByNameAndParent conn,
+          Endpoints.Handlers.EditCategory.editCategory = DB.editCategory conn,
+          getCategoryById = DB.getCategoryById conn,
+          getCategoryByParentId = DB.getCategoryByParentId conn
+        }

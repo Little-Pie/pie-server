@@ -2,9 +2,9 @@
 
 module Endpoints.Handlers.CreatePost where
 
-import qualified Types.Entities.User as U
-import qualified Types.Entities.Category as C
 import Types.API.CreatePost (CreatePostRequest (..))
+import qualified Types.Entities.Category as C
+import qualified Types.Entities.User as U
 
 data Handle m = Handle
   { getCategoryById :: Int -> m [C.Category],

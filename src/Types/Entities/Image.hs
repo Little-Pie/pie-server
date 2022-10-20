@@ -3,8 +3,8 @@
 
 module Types.Entities.Image where
 
-import Data.Aeson (ToJSON, toJSON, object, (.=))
-import Database.PostgreSQL.Simple.FromRow (FromRow, fromRow, field)
+import Data.Aeson (ToJSON, object, toJSON, (.=))
+import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
 
 data Image = Image
   { imageId :: Int,

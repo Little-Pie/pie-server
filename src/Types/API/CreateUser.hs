@@ -2,18 +2,20 @@
 
 module Types.API.CreateUser where
 
-import Data.Aeson (FromJSON, Value(..), parseJSON, (.:))
+import Data.Aeson (FromJSON, Value (..), parseJSON, (.:))
 
-data CreateUserRequest = CreateUserRequest {name :: String
-                                           ,login :: String
-                                           ,password :: String
-                                           ,isAdmin :: Bool
-                                           ,isAuthor :: Bool
-                                           }
+data CreateUserRequest = CreateUserRequest
+  { name :: String,
+    login :: String,
+    password :: String,
+    isAdmin :: Bool,
+    isAuthor :: Bool
+  }
 
 instance FromJSON CreateUserRequest where
-  parseJSON (Object createUserRequest) = CreateUserRequest <$> createUserRequest .: "name"
-                                                           <*> createUserRequest .: "login"
-                                                           <*> createUserRequest .: "password"
-                                                           <*> createUserRequest .: "isAdmin"
-                                                           <*> createUserRequest .: "isAuthor"
+  parseJSON (Object createUserRequest) =
+    CreateUserRequest <$> createUserRequest .: "name"
+      <*> createUserRequest .: "login"
+      <*> createUserRequest .: "password"
+      <*> createUserRequest .: "isAdmin"
+      <*> createUserRequest .: "isAuthor"

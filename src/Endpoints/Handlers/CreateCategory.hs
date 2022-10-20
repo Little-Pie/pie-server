@@ -2,9 +2,9 @@
 
 module Endpoints.Handlers.CreateCategory where
 
-import qualified Types.Entities.User as U
-import qualified Types.Entities.Category as C
 import Types.API.CreateCategory (CreateCategoryRequest (..))
+import qualified Types.Entities.Category as C
+import qualified Types.Entities.User as U
 
 data Handle m = Handle
   { getGeneralCategoryByName :: String -> m [C.Category],

@@ -1,9 +1,9 @@
 module Fixtures where
 
-import Types.Entities.User (User (..))
 import Types.Entities.Category (Category (..))
+import Types.Entities.Image (Image (..))
 import Types.Entities.Post (Post (..))
-import Types.Entities.Image (Image(..))
+import Types.Entities.User (User (..))
 
 userAdminAuthor :: User
 userAdminAuthor = User 1 "name" "login" "password" undefined True True

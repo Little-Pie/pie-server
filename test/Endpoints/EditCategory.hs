@@ -2,22 +2,23 @@
 
 module Endpoints.EditCategory where
 
-import Endpoints.Handlers.EditCategory (EditCategoryResult (..), Handle (..), editCategoryHandler)
-import Types.Entities.User (User (..))
-import Types.Entities.Category as Category (Category (..))
-import Types.API.EditCategory as EditCategory (EditCategoryRequest (..))
 import Data.Functor.Identity (Identity)
+import Endpoints.Handlers.EditCategory (EditCategoryResult (..), Handle (..), editCategoryHandler)
+import Fixtures (category, categoryRoot, userAdminAuthor, userNotAdminAuthor)
 import Test.Hspec (SpecWith, describe, it, shouldBe)
-import Fixtures (userAdminAuthor, userNotAdminAuthor, category, categoryRoot)
+import Types.API.EditCategory as EditCategory (EditCategoryRequest (..))
+import Types.Entities.Category as Category (Category (..))
+import Types.Entities.User (User (..))
 
 handle :: Handle Identity
-handle = Handle
-  { getGeneralCategoryByName = \_ -> pure [],
-    getCategoryByNameAndParent = \_ _ -> pure [],
-    editCategory = \_ _ _ -> pure (),
-    getCategoryById = \_ -> pure [category],
-    getCategoryByParentId = \_ -> pure []
-  }
+handle =
+  Handle
+    { getGeneralCategoryByName = \_ -> pure [],
+      getCategoryByNameAndParent = \_ _ -> pure [],
+      editCategory = \_ _ _ -> pure (),
+      getCategoryById = \_ -> pure [category],
+      getCategoryByParentId = \_ -> pure []
+    }
 
 editCategoryRequest :: EditCategoryRequest
 editCategoryRequest = EditCategoryRequest 1 (Just "name") (Just 3)
@@ -38,9 +39,10 @@ editCategoryTest =
       let res = editCategoryHandler handle {getCategoryById = \_ -> pure [categoryRoot], getGeneralCategoryByName = \_ -> pure [category]} userAdminAuthor editCategoryRequest {EditCategory.parentCategoryId = Nothing}
       res `shouldBe` pure NameIsTaken
     it "Should return bad request in case parent category with such id does not exist" $ do
-      let handleCase = handle
-            { getCategoryById = \id -> if id == 1 then pure [categoryRoot] else pure []
-            } 
+      let handleCase =
+            handle
+              { getCategoryById = \id -> if id == 1 then pure [categoryRoot] else pure []
+              }
       let res = editCategoryHandler handleCase userAdminAuthor editCategoryRequest
       res `shouldBe` pure ParentCategoryNotExist
     it "Should return bad request in case category with such name already exists" $ do

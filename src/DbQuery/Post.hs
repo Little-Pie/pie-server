@@ -3,18 +3,18 @@
 
 module DbQuery.Post where
 
-import Types.Entities.Post (Post)
-import Types.Entities.GetPosts (GetPosts)
 import qualified Data.ByteString.Char8 as BS
-import Database.PostgreSQL.Simple (Connection, Only(..), execute, executeMany, query, returning)
-import Database.PostgreSQL.Simple.Types (Query(..))
+import Database.PostgreSQL.Simple (Connection, Only (..), execute, executeMany, query, returning)
+import Database.PostgreSQL.Simple.Types (Query (..))
+import Types.Entities.GetPosts (GetPosts)
+import Types.Entities.Post (Post)
 
 insertNewPost :: Connection -> String -> String -> Int -> Int -> Bool -> [String] -> [String] -> IO ()
 insertNewPost conn title text categoryId userId isPublished base64Images contentTypes = do
-  postId' <- mapM (pure . fromOnly) =<< returning conn "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") VALUES (?,?,?,?,?) RETURNING id" [(title,text,userId,isPublished,categoryId)] :: IO [Int]
+  postId' <- mapM (pure . fromOnly) =<< returning conn "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") VALUES (?,?,?,?,?) RETURNING id" [(title, text, userId, isPublished, categoryId)] :: IO [Int]
   case postId' of
     [] -> putStrLn "Something went wrong: post wasn't created"
-    (postId:_) -> do
+    (postId : _) -> do
       let imageRows = zipWith (postId,,) base64Images contentTypes
       executeMany conn "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)" imageRows
       pure ()
@@ -36,16 +36,20 @@ getPostById conn postId = query conn "select * from posts where id=(?)" (Only po
 initQuery = "SELECT posts.*,users.name,categories.name FROM posts JOIN users ON posts.\"authorId\" = users.id JOIN categories ON posts.\"categoryId\" = categories.id LEFT OUTER JOIN images ON posts.id = images.\"postId\" WHERE \"isPublished\" = true "
 
 getSortBy :: Maybe BS.ByteString -> Query
-getSortBy = maybe "" (\n -> case n of
-    "category" -> " order by categories.name "
-    "author" -> " order by users.name "
-    "createdAt" -> " order by createdAt "
-    "title" -> " order by title "
-    "imagesNumber" -> " GROUP BY posts.id, users.name, categories.name ORDER BY COUNT(images.\"postId\") DESC "
-    _ -> "")
+getSortBy =
+  maybe
+    ""
+    ( \n -> case n of
+        "category" -> " order by categories.name "
+        "author" -> " order by users.name "
+        "createdAt" -> " order by createdAt "
+        "title" -> " order by title "
+        "imagesNumber" -> " GROUP BY posts.id, users.name, categories.name ORDER BY COUNT(images.\"postId\") DESC "
+        _ -> ""
+    )
 
 getFilterBy :: [(BS.ByteString, BS.ByteString)] -> Query
-getFilterBy queryFilters = mconcat $ map (\(filter',filterParam) -> createFilterDBReq filter' filterParam) queryFilters
+getFilterBy queryFilters = mconcat $ map (\(filter', filterParam) -> createFilterDBReq filter' filterParam) queryFilters
 
 createFilterDBReq :: BS.ByteString -> BS.ByteString -> Query
 createFilterDBReq filt filterParam = case filt of

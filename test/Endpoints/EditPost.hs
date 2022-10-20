@@ -2,21 +2,22 @@
 
 module Endpoints.EditPost where
 
+import Data.Functor.Identity (Identity)
 import Endpoints.Handlers.EditPost (EditPostResult (..), Handle (..), editPostHandler)
-import Types.Entities.User (User (..))
+import Fixtures (category, post, userAdminAuthor, userAdminNotAuthor)
+import Test.Hspec (SpecWith, describe, it, shouldBe)
+import Types.API.EditPost (EditPostRequest (..))
 import Types.Entities.Category (Category (..))
 import Types.Entities.Post (Post (..))
-import Types.API.EditPost (EditPostRequest (..))
-import Data.Functor.Identity (Identity)
-import Test.Hspec (SpecWith, describe, it, shouldBe)
-import Fixtures (category,userAdminAuthor,userAdminNotAuthor,post)
+import Types.Entities.User (User (..))
 
 handle :: Handle Identity
-handle = Handle
-  { editPost = \_ _ _ _ _ _ _ -> pure (),
-    getCategoryById = \_ -> pure [category],
-    getPostById = \_ -> pure [post]
-  }
+handle =
+  Handle
+    { editPost = \_ _ _ _ _ _ _ -> pure (),
+      getCategoryById = \_ -> pure [category],
+      getPostById = \_ -> pure [post]
+    }
 
 editPostRequest :: EditPostRequest
 editPostRequest = EditPostRequest 1 (Just "title") (Just "text") (Just 1) (Just False) (Just ["imageInBase64"]) (Just ["imageContentType"])

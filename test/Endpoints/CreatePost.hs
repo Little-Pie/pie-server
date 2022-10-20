@@ -2,20 +2,21 @@
 
 module Endpoints.CreatePost where
 
+import Data.Functor.Identity (Identity)
 import Endpoints.Handlers.CreatePost (CreatePostResult (..), Handle (..), createPostHandler)
-import Types.Entities.User (User (..))
+import Fixtures (category, userAdminAuthor, userAdminNotAuthor)
+import Test.Hspec (SpecWith, describe, it, shouldBe)
+import Types.API.CreatePost (CreatePostRequest (..))
 import Types.Entities.Category (Category (..))
 import Types.Entities.Post (Post (..))
-import Types.API.CreatePost (CreatePostRequest (..))
-import Data.Functor.Identity (Identity)
-import Test.Hspec (SpecWith, describe, it, shouldBe)
-import Fixtures (userAdminAuthor, userAdminNotAuthor, category)
+import Types.Entities.User (User (..))
 
 handle :: Handle Identity
-handle = Handle
-  { getCategoryById = \_ -> pure [category],
-    insertNewPost = \_ _ _ _ _ _ _ -> pure ()
-  }
+handle =
+  Handle
+    { getCategoryById = \_ -> pure [category],
+      insertNewPost = \_ _ _ _ _ _ _ -> pure ()
+    }
 
 createPostRequest :: CreatePostRequest
 createPostRequest = CreatePostRequest "title" "text" 1 False ["imageInBase64"] ["imageContentType"]

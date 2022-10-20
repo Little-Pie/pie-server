@@ -2,8 +2,8 @@
 
 module DbQuery.Image where
 
+import Database.PostgreSQL.Simple (Connection, Only (..), query)
 import Types.Entities.Image (Image)
-import Database.PostgreSQL.Simple (Connection, Only(..), query)
 
 getImageById :: Connection -> Int -> IO [Image]
 getImageById conn imageId =
@@ -22,4 +22,4 @@ addPostFilters q postIds = helper (q <> " WHERE ") postIds
   where
     helper q [] = Just q
     helper q [postId] = Just (q <> "\"postId\" = (?)")
-    helper q (postId:xs) = helper (q <> "\"postId\" = (?) OR ") xs
+    helper q (postId : xs) = helper (q <> "\"postId\" = (?) OR ") xs

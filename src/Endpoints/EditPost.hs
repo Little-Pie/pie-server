@@ -2,14 +2,14 @@
 
 module Endpoints.EditPost where
 
+import Database.PostgreSQL.Simple (Connection)
 import qualified DbQuery.Category as DBC
 import qualified DbQuery.Post as DBP
-import Types.Entities.User (User)
-import Types.API.EditPost (EditPostRequest)
-import Database.PostgreSQL.Simple (Connection)
-import Helpers (responseOk, responseBadRequest, responseNotFound)
+import Endpoints.Handlers.EditPost (EditPostResult (..), Handle (..), editPostHandler)
+import Helpers (responseBadRequest, responseNotFound, responseOk)
 import Network.Wai (Response)
-import Endpoints.Handlers.EditPost (Handle(..), EditPostResult(..), editPostHandler)
+import Types.API.EditPost (EditPostRequest)
+import Types.Entities.User (User)
 
 editPost :: Connection -> User -> EditPostRequest -> IO Response
 editPost conn user req = do
@@ -19,9 +19,9 @@ editPost conn user req = do
     PostNotExist -> pure $ responseBadRequest "Post with such id does not exist"
     NotAuthor -> pure $ responseNotFound ""
   where
-    handle = Handle
-      { Endpoints.Handlers.EditPost.editPost = DBP.editPost conn,
-        getCategoryById = DBC.getCategoryById conn,
-        getPostById = DBP.getPostById conn
-      }
-    
+    handle =
+      Handle
+        { Endpoints.Handlers.EditPost.editPost = DBP.editPost conn,
+          getCategoryById = DBC.getCategoryById conn,
+          getPostById = DBP.getPostById conn
+        }

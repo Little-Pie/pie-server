@@ -2,18 +2,19 @@
 
 module Endpoints.CreateUser where
 
-import Endpoints.Handlers.CreateUser (CreateUserResult (..), Handle (..), createUserHandler)
-import Types.Entities.User (User (..))
-import Types.API.CreateUser (CreateUserRequest (..))
 import Data.Functor.Identity (Identity)
-import Test.Hspec (SpecWith, describe, it, shouldBe)
+import Endpoints.Handlers.CreateUser (CreateUserResult (..), Handle (..), createUserHandler)
 import Fixtures (userAdminAuthor, userNotAdminAuthor)
+import Test.Hspec (SpecWith, describe, it, shouldBe)
+import Types.API.CreateUser (CreateUserRequest (..))
+import Types.Entities.User (User (..))
 
 handle :: Handle Identity
-handle = Handle
-  { insertNewUser = \_ _ _ _ _ -> pure (),
-    getUserByLogin = \_ -> pure []
-  }
+handle =
+  Handle
+    { insertNewUser = \_ _ _ _ _ -> pure (),
+      getUserByLogin = \_ -> pure []
+    }
 
 createUserRequest :: CreateUserRequest
 createUserRequest = CreateUserRequest "name1" "login1" "password1" False False
