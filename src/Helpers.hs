@@ -16,17 +16,23 @@ import Network.HTTP.Types (Status, Query, statusCode, status200, hContentType, s
 import Network.Wai (Middleware, Response, responseStatus, responseLBS, rawPathInfo, rawQueryString)
 import Database.PostgreSQL.Simple as PSQL (ConnectInfo(..), Only(..), Connection, execute_, defaultConnectInfo)
 
-printLogDebug :: Config -> String -> IO ()
-printLogDebug Config {..} str = case loggingLevel of
-  Debug -> putStrLn str
-  Warning -> putStrLn str
-  Error -> putStrLn str
-  _ -> pure ()
+printDebug :: Config -> String -> IO ()
+printDebug Config {..} str = if loggingLevel < Release
+  then putStrLn str
+  else pure ()
 
-printLogError :: Config -> String -> IO ()
-printLogError Config {..} str = case loggingLevel of
-  Error -> putStrLn str
-  _ -> pure ()
+printRelease :: Config -> String -> IO ()
+printRelease Config {..} str = if loggingLevel < Warning
+  then putStrLn str
+  else pure ()
+
+printWarning :: Config -> String -> IO ()
+printWarning Config {..} str = if loggingLevel < Error
+  then putStrLn str
+  else pure ()
+
+printError :: Config -> String -> IO ()
+printError Config {..} = putStrLn
 
 dropTables :: Connection -> IO ()
 dropTables conn = do
