@@ -29,6 +29,7 @@ library
       DbQuery.Category
       DbQuery.Image
       DbQuery.Post
+      DbQuery.Test
       DbQuery.User
       Endpoints
       Endpoints.CreateCategory
@@ -72,6 +73,7 @@ library
     , hspec
     , http-types
     , postgresql-simple
+    , postgresql-simple-migration
     , time
     , wai
     , warp
@@ -94,6 +96,7 @@ executable server-exe
     , hspec
     , http-types
     , postgresql-simple
+    , postgresql-simple-migration
     , server
     , time
     , wai
@@ -125,6 +128,7 @@ test-suite server-test
     , hspec
     , http-types
     , postgresql-simple
+    , postgresql-simple-migration
     , server
     , time
     , wai

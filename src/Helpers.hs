@@ -44,14 +44,6 @@ printLog logHandle str = do
   hPutStrLn logHandle str
   hFlush logHandle
 
-dropTables :: Connection -> IO ()
-dropTables conn = do
-  execute_ conn "drop table if exists users"
-  execute_ conn "drop table if exists posts"
-  execute_ conn "drop table if exists categories"
-  execute_ conn "drop table if exists images"
-  pure ()
-
 localPG :: Config -> ConnectInfo
 localPG Config {..} =
   defaultConnectInfo

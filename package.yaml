@@ -28,6 +28,7 @@ dependencies:
 - cryptonite
 - aeson
 - postgresql-simple
+- postgresql-simple-migration
 - aeson-pretty
 - time
 - base64-bytestring
