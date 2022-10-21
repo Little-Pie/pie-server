@@ -22,6 +22,8 @@ fillTables conn = do
     [ ("Admin" :: String, "Admin" :: String, "a86807bb96a714fe9b22425893e698334cd71e36b0eef2be" :: String, True, True),
       ("Alena" :: String, "Alena" :: String, "a86807bb96a714fe9b22425893e698334cd71e36b0eef2be" :: String, False, True),
       ("Oleg" :: String, "Oleg" :: String, "a86807bb96a714fe9b22425893e698334cd71e36b0eef2be" :: String, True, False),
+      ("Polina" :: String, "Polina" :: String, "a86807bb96a714fe9b22425893e698334cd71e36b0eef2be" :: String, False, True),
+      ("Katya" :: String, "Katya" :: String, "a86807bb96a714fe9b22425893e698334cd71e36b0eef2be" :: String, False, True),
       ("Gena" :: String, "Gena" :: String, "a86807bb96a714fe9b22425893e698334cd71e36b0eef2be" :: String, False, False)
     ]
   execute
@@ -41,7 +43,13 @@ fillTables conn = do
     "INSERT INTO posts (title,text,\"categoryId\",\"authorId\",\"isPublished\") VALUES (?,?,?,?,?)"
     [ ("GreenPeace" :: String, "Save Nature" :: String, 2 :: Int, 2 :: Int, True),
       ("Apples" :: String, "Eat apples, stay healthy" :: String, 4 :: Int, 1 :: Int, True),
-      ("Tomatoes" :: String, "Tomatoes are red" :: String, 5 :: Int, 1 :: Int, False)
+      ("Tomatoes" :: String, "Tomatoes are red" :: String, 5 :: Int, 1 :: Int, False),
+      ("Cucumbers" :: String, "Cucumbers are green" :: String, 2 :: Int, 2 :: Int, True),
+      ("Blood" :: String, "Blood is red" :: String, 3 :: Int, 4 :: Int, True),
+      ("Leaves" :: String, "Leaves are on the tree" :: String, 4 :: Int, 4 :: Int, True),
+      ("Traffic light" :: String, "You should pass across the street only when it's green light" :: String, 2 :: Int, 5 :: Int, True),
+      ("Pineapples" :: String, "Pineapples are not red" :: String, 3 :: Int, 5 :: Int, True),
+      ("Grass" :: String, "Grass is green" :: String, 2 :: Int, 1 :: Int, True)
     ]
   executeMany
     conn
