@@ -94,24 +94,36 @@ responseOk,
   responseBadRequest,
   responseUnauthorized,
   responseInternalError ::
-    LBS.ByteString -> Response
-responseOk = responsePlainText status200
-responseInternalError = responsePlainText status500
-responseNotFound = responsePlainText notFound404
-responseBadRequest = responsePlainText badRequest400
-responseUnauthorized = responsePlainText unauthorized401
+    Environment -> LBS.ByteString -> IO Response
+responseOk env str = do
+  printRelease env $ (BS.unpack . LBS.toStrict) str
+  pure $ responsePlainText status200 str
+responseInternalError env str = do
+  printError env $ (BS.unpack . LBS.toStrict) str
+  pure $ responsePlainText status500 str
+responseNotFound env str = do
+  printWarning env $ (BS.unpack . LBS.toStrict) str
+  pure $ responsePlainText notFound404 str
+responseBadRequest env str = do
+  printWarning env $ (BS.unpack . LBS.toStrict) str
+  pure $ responsePlainText badRequest400 str
+responseUnauthorized env str = do
+  printWarning env $ (BS.unpack . LBS.toStrict) str
+  pure $ responsePlainText unauthorized401 str
 
 responsePlainText :: Status -> LBS.ByteString -> Response
 responsePlainText =
   (`responseLBS` [(hContentType, "text/plain")])
 
-responseImage :: BS.ByteString -> LBS.ByteString -> Response
-responseImage contentType = responseLBS status200 [(hContentType, contentType)]
+responseImage :: Environment -> BS.ByteString -> LBS.ByteString -> IO Response
+responseImage env contentType str = do
+  printRelease env "Responded with an image"
+  pure $ responseLBS status200 [(hContentType, contentType)] str
 
-withLogging :: Middleware
-withLogging app req respond =
+withLogging :: Environment -> Middleware
+withLogging env app req respond =
   app req $ \response -> do
-    putStrLn $ statusOf response ++ ": " ++ query
+    printRelease env $ statusOf response ++ ": " ++ query
     respond response
   where
     query =
@@ -122,15 +134,15 @@ withLogging app req respond =
           ]
     statusOf = show . statusCode . responseStatus
 
-withParsedRequest :: FromJSON a => LBS.ByteString -> (a -> IO Response) -> IO Response
-withParsedRequest reqBody f =
+withParsedRequest :: FromJSON a => Environment -> LBS.ByteString -> (a -> IO Response) -> IO Response
+withParsedRequest env reqBody f =
   case decode reqBody of
-    Nothing -> pure $ responseBadRequest "Couldn't parse body"
+    Nothing -> responseBadRequest env "Couldn't parse body"
     Just parsedReq -> f parsedReq
 
-withAuthorization :: Connection -> Maybe BS.ByteString -> (User -> IO Response) -> IO Response
-withAuthorization conn mbBase64LoginAndPassword f = do
+withAuthorization :: Environment -> Maybe BS.ByteString -> (User -> IO Response) -> IO Response
+withAuthorization env@Environment {..} mbBase64LoginAndPassword f = do
   (str, mbUser) <- authorize conn mbBase64LoginAndPassword
   case mbUser of
-    Nothing -> pure $ responseUnauthorized str
+    Nothing -> responseUnauthorized env str
     Just authorizedUser -> f authorizedUser

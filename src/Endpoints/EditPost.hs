@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.EditPost where
 
-import Database.PostgreSQL.Simple (Connection)
+import Config (Environment (..))
 import qualified DbQuery.Category as DBC
 import qualified DbQuery.Post as DBP
 import Endpoints.Handlers.EditPost (EditPostResult (..), Handle (..), editPostHandler)
@@ -11,13 +12,13 @@ import Network.Wai (Response)
 import Types.API.EditPost (EditPostRequest)
 import Types.Entities.User (User)
 
-editPost :: Connection -> User -> EditPostRequest -> IO Response
-editPost conn user req = do
+editPost :: Environment -> User -> EditPostRequest -> IO Response
+editPost env@Environment {..} user req = do
   res <- editPostHandler handle user req
   case res of
-    Success -> pure $ responseOk "Changes applied"
-    PostNotExist -> pure $ responseBadRequest "Post with such id does not exist"
-    NotAuthor -> pure $ responseNotFound ""
+    Success -> responseOk env "Changes applied"
+    PostNotExist -> responseBadRequest env "Post with such id does not exist"
+    NotAuthor -> responseNotFound env ""
   where
     handle =
       Handle

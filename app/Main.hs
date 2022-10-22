@@ -26,7 +26,8 @@ main = do
       args <- getArgs
       runMigrations args conn
       printError env "Serving..."
-      run 4000 $ withLogging $ application env
+      putStrLn "Serving..."
+      run 4000 $ withLogging env $ application env
       hClose logHandle
       close conn
 

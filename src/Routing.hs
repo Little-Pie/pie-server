@@ -23,75 +23,80 @@ import qualified Types.Entities.GetPosts as GP
 import qualified Types.Entities.Image as Image
 
 application :: Environment -> Application
-application Environment {..} req respond
-  | requestMethod req /= methodPost && requestMethod req /= methodGet = respond $ responseBadRequest "Use method GET or POST"
+application env@Environment {..} req respond
   | requestMethod req == methodPost = do
     body <- bodyIO
     case path of
-      "" ->
-        respond $
-          if query' /= ""
-            then responseBadRequest "No query parameters needed!"
-            else responseOk "Hi POST!"
       "createUser" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
-          withParsedRequest body (createUser conn authorizedUser)
+        response <- withAuthorization env mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest env body (createUser env authorizedUser)
         respond response
       "createPost" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
-          withParsedRequest body (createPost conn authorizedUser)
+        response <- withAuthorization env mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest env body (createPost env authorizedUser)
         respond response
       "editPost" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
-          withParsedRequest body (editPost conn authorizedUser)
+        response <- withAuthorization env mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest env body (editPost env authorizedUser)
         respond response
       "createCategory" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
-          withParsedRequest body (createCategory conn authorizedUser)
+        response <- withAuthorization env mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest env body (createCategory env authorizedUser)
         respond response
       "editCategory" -> do
-        response <- withAuthorization conn mbBase64LoginAndPassword $ \authorizedUser ->
-          withParsedRequest body (editCategory conn authorizedUser)
+        response <- withAuthorization env mbBase64LoginAndPassword $ \authorizedUser ->
+          withParsedRequest env body (editCategory env authorizedUser)
         respond response
-      _ -> respond $ responseNotFound ""
-  | path == "" =
-    respond $
-      if query' /= ""
-        then responseBadRequest "No query parameters needed!"
-        else responseOk "Hi GET!"
-  | path == "getImageById" = case lookup' "id" queryItems of
-    Nothing -> respond $ responseBadRequest "Enter image id"
-    Just imageId -> case readMaybe (BS.unpack imageId) :: Maybe Int of
-      Nothing -> respond $ responseBadRequest "Image id should be a number"
-      Just imageId' -> do
-        response <- getImageById conn imageId'
+      _ -> do
+        response <- responseNotFound env ""
         respond response
-  | path == "categories" = do
-    let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
-    let cfgLimit = limit
-    let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
-    let offset' = fromMaybe offset mbOffset
-    categories <- DBC.showCategories conn limit' offset'
-    respond $ responseOk $ encodePretty categories
-  | path == "users" = do
-    let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
-    let cfgLimit = limit
-    let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
-    let offset' = fromMaybe offset mbOffset
-    users <- DBU.showUsers conn limit' offset'
-    respond $ responseOk $ encodePretty users
-  | path == "posts" = do
-    let queryFilters = getQueryFilters queryItems
-    let mbQuerySortBy = lookup' "sortBy" queryItems
-    let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
-    let cfgLimit = limit
-    let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
-    let offset' = fromMaybe offset mbOffset
-    posts <- DBP.showPosts conn limit' offset' queryFilters mbQuerySortBy
-    images <- DBI.getImagesByPostIds conn (map GP.postId posts)
-    let postsWithImages = mkPostsWithImages posts images
-    respond $ responseOk $ encodePretty postsWithImages
-  | otherwise = respond $ responseNotFound ""
+  | requestMethod req == methodGet = do
+    case path of
+      "getImageById" -> case lookup' "id" queryItems of
+        Nothing -> do
+          response <- responseBadRequest env "Enter image id"
+          respond response
+        Just imageId -> case readMaybe (BS.unpack imageId) :: Maybe Int of
+          Nothing -> do
+            response <- responseBadRequest env "Image id should be a number"
+            respond response
+          Just imageId' -> do
+            response <- getImageById env imageId'
+            respond response
+      "categories" -> do
+        let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
+        let cfgLimit = limit
+        let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
+        let offset' = fromMaybe offset mbOffset
+        categories <- DBC.showCategories conn limit' offset'
+        response <- responseOk env $ encodePretty categories
+        respond response
+      "users" -> do
+        let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
+        let cfgLimit = limit
+        let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
+        let offset' = fromMaybe offset mbOffset
+        users <- DBU.showUsers conn limit' offset'
+        response <- responseOk env $ encodePretty users
+        respond response
+      "posts" -> do
+        let queryFilters = getQueryFilters queryItems
+        let mbQuerySortBy = lookup' "sortBy" queryItems
+        let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
+        let cfgLimit = limit
+        let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
+        let offset' = fromMaybe offset mbOffset
+        posts <- DBP.showPosts conn limit' offset' queryFilters mbQuerySortBy
+        images <- DBI.getImagesByPostIds conn (map GP.postId posts)
+        let postsWithImages = mkPostsWithImages posts images
+        response <- responseOk env $ encodePretty postsWithImages
+        respond response
+      _ -> do
+        response <- responseNotFound env ""
+        respond response
+  | otherwise = do
+    response <- responseNotFound env ""
+    respond response
   where
     queryItems = queryString req
     query' = rawQueryString req
