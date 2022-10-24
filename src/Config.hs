@@ -4,6 +4,7 @@
 module Config where
 
 import Control.Monad (mzero)
+import Control.Monad.Reader (ReaderT)
 import Data.Aeson (FromJSON, Value (..), decodeStrict, parseJSON, (.:))
 import qualified Data.ByteString.Char8 as BS
 import Database.PostgreSQL.Simple (Connection)
@@ -47,3 +48,5 @@ data Environment = Environment
     logHandle :: Handle,
     loggingLevel :: LoggingLevel
   }
+
+type App = ReaderT Environment IO

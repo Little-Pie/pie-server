@@ -3,7 +3,8 @@
 
 module Endpoints.CreatePost where
 
-import Config (Environment (..))
+import Config (App, Environment (..))
+import Control.Monad.Reader (ask, lift)
 import qualified DbQuery.Category as DBC
 import qualified DbQuery.Post as DBP
 import Endpoints.Handlers.CreatePost (CreatePostResult (..), Handle (..), createPostHandler)
@@ -12,15 +13,16 @@ import Network.Wai (Response)
 import qualified Types.API.CreatePost as API
 import qualified Types.Entities.User as U
 
-createPost :: Environment -> U.User -> API.CreatePostRequest -> IO Response
-createPost env@Environment {..} author req = do
-  res <- createPostHandler handle author req
+createPost :: U.User -> API.CreatePostRequest -> App Response
+createPost author req = do
+  Environment {..} <- ask
+  res <- lift $ createPostHandler (handle conn) author req
   case res of
-    Success -> responseOk env "Post is created"
-    CategoryNotExist -> responseBadRequest env "Category with such id does not exist"
-    NotAuthor -> responseBadRequest env "You can not post news because you are not an author"
+    Success -> responseOk "Post is created"
+    CategoryNotExist -> responseBadRequest "Category with such id does not exist"
+    NotAuthor -> responseBadRequest "You can not post news because you are not an author"
   where
-    handle =
+    handle conn =
       Handle
         { getCategoryById = DBC.getCategoryById conn,
           insertNewPost = DBP.insertNewPost conn

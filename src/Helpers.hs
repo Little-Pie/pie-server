@@ -3,7 +3,8 @@
 
 module Helpers where
 
-import Config (Config (..), Environment (..))
+import Config (App, Config (..), Environment (..))
+import Control.Monad.Reader (ask, liftIO, runReaderT)
 import Data.Aeson (FromJSON, Value (..), decode, decodeStrict, parseJSON, (.:))
 import qualified Data.ByteString.Base64 as BASE
 import qualified Data.ByteString.Char8 as BS
@@ -14,30 +15,35 @@ import DbQuery.User (getUserByLogin)
 import Hash (makeStringHash)
 import Logging (LoggingLevel (..))
 import Network.HTTP.Types (Query, Status, badRequest400, hContentType, notFound404, status200, status500, statusCode, unauthorized401)
-import Network.Wai (Middleware, Response, rawPathInfo, rawQueryString, responseLBS, responseStatus)
+import Network.Wai (Request, Response, ResponseReceived, rawPathInfo, rawQueryString, responseLBS, responseStatus)
 import System.IO (Handle, hFlush, hPutStrLn)
 import Types.Entities.User (User (..))
 
-printDebug :: Environment -> String -> IO ()
-printDebug Environment {..} str =
+printDebug :: String -> App ()
+printDebug str = do
+  Environment {..} <- ask
   if loggingLevel < Release
-    then printLog logHandle str
+    then liftIO $ printLog logHandle str
     else pure ()
 
-printRelease :: Environment -> String -> IO ()
-printRelease Environment {..} str =
+printRelease :: String -> App ()
+printRelease str = do
+  Environment {..} <- ask
   if loggingLevel < Warning
-    then printLog logHandle str
+    then liftIO $ printLog logHandle str
     else pure ()
 
-printWarning :: Environment -> String -> IO ()
-printWarning Environment {..} str =
+printWarning :: String -> App ()
+printWarning str = do
+  Environment {..} <- ask
   if loggingLevel < Error
-    then printLog logHandle str
+    then liftIO $ printLog logHandle str
     else pure ()
 
-printError :: Environment -> String -> IO ()
-printError Environment {..} = printLog logHandle
+printError :: String -> App ()
+printError str = do
+  Environment {..} <- ask
+  liftIO $ printLog logHandle str
 
 printLog :: Handle -> String -> IO ()
 printLog logHandle str = do
@@ -94,36 +100,37 @@ responseOk,
   responseBadRequest,
   responseUnauthorized,
   responseInternalError ::
-    Environment -> LBS.ByteString -> IO Response
-responseOk env str = do
-  printRelease env $ (BS.unpack . LBS.toStrict) str
+    LBS.ByteString -> App Response
+responseOk str = do
+  printRelease $ (BS.unpack . LBS.toStrict) str
   pure $ responsePlainText status200 str
-responseInternalError env str = do
-  printError env $ (BS.unpack . LBS.toStrict) str
+responseInternalError str = do
+  printError $ (BS.unpack . LBS.toStrict) str
   pure $ responsePlainText status500 str
-responseNotFound env str = do
-  printWarning env $ (BS.unpack . LBS.toStrict) str
+responseNotFound str = do
+  printWarning $ (BS.unpack . LBS.toStrict) str
   pure $ responsePlainText notFound404 str
-responseBadRequest env str = do
-  printWarning env $ (BS.unpack . LBS.toStrict) str
+responseBadRequest str = do
+  printWarning $ (BS.unpack . LBS.toStrict) str
   pure $ responsePlainText badRequest400 str
-responseUnauthorized env str = do
-  printWarning env $ (BS.unpack . LBS.toStrict) str
+responseUnauthorized str = do
+  printWarning $ BS.unpack . LBS.toStrict $ str
   pure $ responsePlainText unauthorized401 str
 
 responsePlainText :: Status -> LBS.ByteString -> Response
 responsePlainText =
   (`responseLBS` [(hContentType, "text/plain")])
 
-responseImage :: Environment -> BS.ByteString -> LBS.ByteString -> IO Response
-responseImage env contentType str = do
-  printRelease env "Responded with an image"
+responseImage :: BS.ByteString -> LBS.ByteString -> App Response
+responseImage contentType str = do
+  printRelease "Responded with an image"
   pure $ responseLBS status200 [(hContentType, contentType)] str
 
-withLogging :: Environment -> Middleware
-withLogging env app req respond =
+withLogging :: (Request -> (Response -> IO ResponseReceived) -> App ResponseReceived) -> Request -> (Response -> IO ResponseReceived) -> App ResponseReceived
+withLogging app req respond = do
+  env <- ask
   app req $ \response -> do
-    printRelease env $ statusOf response ++ ": " ++ query
+    runReaderT (printRelease $ statusOf response ++ ": " ++ query) env
     respond response
   where
     query =
@@ -134,15 +141,16 @@ withLogging env app req respond =
           ]
     statusOf = show . statusCode . responseStatus
 
-withParsedRequest :: FromJSON a => Environment -> LBS.ByteString -> (a -> IO Response) -> IO Response
-withParsedRequest env reqBody f =
+withParsedRequest :: FromJSON a => LBS.ByteString -> (a -> App Response) -> App Response
+withParsedRequest reqBody f =
   case decode reqBody of
-    Nothing -> responseBadRequest env "Couldn't parse body"
+    Nothing -> responseBadRequest "Couldn't parse body"
     Just parsedReq -> f parsedReq
 
-withAuthorization :: Environment -> Maybe BS.ByteString -> (User -> IO Response) -> IO Response
-withAuthorization env@Environment {..} mbBase64LoginAndPassword f = do
-  (str, mbUser) <- authorize conn mbBase64LoginAndPassword
+withAuthorization :: Maybe BS.ByteString -> (User -> App Response) -> App Response
+withAuthorization mbBase64LoginAndPassword f = do
+  Environment {..} <- ask
+  (str, mbUser) <- liftIO $ authorize conn mbBase64LoginAndPassword
   case mbUser of
-    Nothing -> responseUnauthorized env str
+    Nothing -> responseUnauthorized str
     Just authorizedUser -> f authorizedUser
