@@ -4,15 +4,16 @@
 module Main where
 
 import Config (Config (..), Environment (..), getConfig)
+import Control.Exception (SomeException)
 import Control.Monad.Reader (liftIO, runReaderT)
---import Control.Exception (SomeException, catch)
 import Database.PostgreSQL.Simple (Connection, close, connect)
 import Database.PostgreSQL.Simple.Migration (MigrationCommand (..), MigrationContext (..), runMigration)
 import DbQuery.Test (deleteFromTables, dropTables, fillTables)
 import Hash (makeStringHash)
-import Helpers (localPG, printDebug, printError, printRelease, printWarning, withLogging)
-import Network.Wai (Application)
-import Network.Wai.Handler.Warp (run)
+import Helpers (localPG, printError, responsePlainText, withLogging)
+import Network.HTTP.Types (status500)
+import Network.Wai (Application, Request, Response)
+import Network.Wai.Handler.Warp (Settings, defaultSettings, runSettings, setOnException, setOnExceptionResponse, setPort)
 import Routing (application)
 import System.Environment (getArgs)
 import System.IO (IOMode (..), hClose, openFile)
@@ -29,12 +30,19 @@ main = do
       args <- getArgs
       runMigrations args conn
       putStrLn "Serving..."
-      run 4000 $ appWithEnv env
+      let settings = setOnExceptionResponse exceptionResponseSettings $ setOnException (exceptionSettings env) $ setPort 4000 defaultSettings
+      runSettings settings $ appWithEnv env
       hClose logHandle
       close conn
   where
     appWithEnv :: Environment -> Application
     appWithEnv env request respond = runReaderT (withLogging application request respond) env
+
+exceptionSettings :: Environment -> Maybe Request -> SomeException -> IO ()
+exceptionSettings env mbReq exception = runReaderT (printError $ show exception) env
+
+exceptionResponseSettings :: SomeException -> Response
+exceptionResponseSettings exception = responsePlainText status500 "Something went wrong"
 
 execMigrations :: Connection -> IO ()
 execMigrations conn = do
