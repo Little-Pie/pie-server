@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections #-}
 
@@ -39,7 +40,7 @@ getSortBy :: Maybe BS.ByteString -> Query
 getSortBy =
   maybe
     ""
-    ( \n -> case n of
+    ( \case
         "category" -> " order by categories.name "
         "author" -> " order by users.name "
         "createdAt" -> " order by createdAt "
@@ -49,7 +50,7 @@ getSortBy =
     )
 
 getFilterBy :: [(BS.ByteString, BS.ByteString)] -> Query
-getFilterBy queryFilters = mconcat $ map (\(filter', filterParam) -> createFilterDBReq filter' filterParam) queryFilters
+getFilterBy queryFilters = mconcat $ map (uncurry createFilterDBReq) queryFilters
 
 createFilterDBReq :: BS.ByteString -> BS.ByteString -> Query
 createFilterDBReq filt filterParam = case filt of
