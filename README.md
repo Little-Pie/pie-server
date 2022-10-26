@@ -1,15 +1,15 @@
 # server
 
-# Description:
+## Description:
 * This is news web server with REST API, it accepts HTTP requests and returns responses in JSON format.
 
-# Installation:
+## Installation:
 * Clone repository
 * Rename "config-template.json" to "config.json"
 * Add data for connection to PostreSQL database in "config.json"
 * You can change loggingLevel in "config.json" to Debug, Release, Warning or Error
 
-# Structure:
+## Structure:
 Module Main reads config, parses it and case of success connects to PostgreSQL database and starts app server, which is based on Warp.
 
 Besides Main contains functions to run migrations, to open and to close TXT-file for logging. Filling tables received from migrations with fixtures for testind server can be initialized by command line argument "f".
@@ -26,11 +26,11 @@ Libraries are used to work with the PostgreSQL database: "postgresql-simple" and
 
 The server also uses hashing to securely store user passwords. Library "cryptonite" is used for that.
 
-# Server API (endpoints):
+## Server API (endpoints):
 
 *All request bodies should be in JSON format*
 
-## User
+### User
 
 * /createUser - POST-request for creation user (only available for admins)
 
@@ -38,7 +38,7 @@ Request body should contain: "name", "login", "password", "isAdmin", "isAuthor"
 
 * /users - GET-request for getting a list of users
 
-## Posts
+### Posts
 
 * /createPost - POST-request for creation post (only available for authors)
 
@@ -78,7 +78,7 @@ Searches for a given string that can be found either in the text content, or in 
 
 *example:* "/posts?search=hello
 
-## Categories
+### Categories
 
 * /createCategory - POST-request for creation category (only available for admins)
 
@@ -90,7 +90,7 @@ Request body should contain "categoryId" and may contain "name" and "parentCateg
 
 * /categories - GET-request for getting a list of categories
 
-## Images
+### Images
 
 * /getImageById - GET-request for getting an image by id
 
