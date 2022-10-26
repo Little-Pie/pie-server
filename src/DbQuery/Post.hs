@@ -49,6 +49,10 @@ getSortBy =
         _ -> ""
     )
 
+getSearch :: Maybe BS.ByteString -> Query
+getSearch =
+  maybe "" (\n -> " AND (title like '%" <> Query n <> "%' OR text like '%" <> Query n <> "%' OR users.name like '%" <> Query n <> "%' OR categories.name like '%" <> Query n <> "%')")
+
 getFilterBy :: [(BS.ByteString, BS.ByteString)] -> Query
 getFilterBy queryFilters = mconcat $ map (uncurry createFilterDBReq) queryFilters
 
@@ -62,6 +66,10 @@ createFilterDBReq filt filterParam = case filt of
   "title" -> " AND title like '%" <> Query filterParam <> "%' "
   "text" -> " AND text like '%" <> Query filterParam <> "%' "
 
-showPosts :: Connection -> Int -> Int -> [(BS.ByteString, BS.ByteString)] -> Maybe BS.ByteString -> IO [GetPosts]
-showPosts conn limit' offset' queryFilters mbQuerySortBy =
-  query conn (initQuery <> getFilterBy queryFilters <> getSortBy mbQuerySortBy <> " limit (?) offset (?)") (limit', offset')
+showPosts :: Connection -> Int -> Int -> [(BS.ByteString, BS.ByteString)] -> Maybe BS.ByteString -> Maybe BS.ByteString -> IO [GetPosts]
+showPosts conn limit' offset' queryFilters mbQuerySortBy mbSearch = do
+  print (initQuery <> getFilterBy queryFilters <> getSearch mbSearch <> getSortBy mbQuerySortBy <> " limit (?) offset (?)")
+  query
+    conn
+    (initQuery <> getFilterBy queryFilters <> getSearch mbSearch <> getSortBy mbQuerySortBy <> " limit (?) offset (?)")
+    (limit', offset')

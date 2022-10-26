@@ -84,11 +84,12 @@ application req respond
       "posts" -> do
         let queryFilters = getQueryFilters queryItems
         let mbQuerySortBy = lookup' "sortBy" queryItems
+        let mbSearch = lookup' "search" queryItems
         let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
         let cfgLimit = limit
         let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
         let offset' = fromMaybe offset mbOffset
-        posts <- liftIO $ DBP.showPosts conn limit' offset' queryFilters mbQuerySortBy
+        posts <- liftIO $ DBP.showPosts conn limit' offset' queryFilters mbQuerySortBy mbSearch
         images <- liftIO $ DBI.getImagesByPostIds conn (map GP.postId posts)
         let postsWithImages = mkPostsWithImages posts images
         response <- responseOk $ encodePretty postsWithImages
