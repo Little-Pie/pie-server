@@ -1,0 +1,2 @@
+curl -XPOST -H "Authorization: QWRtaW46MTIz" -d "{\"title\":\"someTitle3\",\"text\":\"someText3\",\"categoryId\":1,\"isPublished\":true,\"base64Images\":[],\"contentTypes\":[]}" http://localhost:4000/createPost
+Pause
