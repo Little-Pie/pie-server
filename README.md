@@ -33,20 +33,27 @@ The server also uses hashing to securely store user passwords. Library "cryptoni
 ## User
 
 * /createUser - POST-request for creation user (only available for admins)
+
 Request body should contain: "name", "login", "password", "isAdmin", "isAuthor"
+
 * /users - GET-request for getting a list of users
 
 ## Posts
 
 * /createPost - POST-request for creation post (only available for authors)
+
 Request body should contain: "title", "text", "categoryId", "isPublished", "base64Images", "contentTypes"
+
 *Post can be created without images, use empty list in "base64Images" for that*
 
 * /editPost - POST-request for editing post (only available for author of post)
+
 Request body should contain "postId" and may contain "title", "text", "categoryId", "isPublished", "base64Images", "contentTypes"
 
 * /posts - GET-request for getting a list of posts
-This endpoint supports filtring, sorting and searching
+
+This endpoint supports **filtration**, **sorting** and **searching**
+
 ***Filters***
 1. createdAt
 2. createdUntil
@@ -55,23 +62,30 @@ This endpoint supports filtring, sorting and searching
 5. categoryId
 6. title (by occurrence of a substring)
 7. text (by occurrence of a substring)
+
 *example:* "/posts?author=John
+
 ***Sorting***
 1. by category name
 2. by author name
 3. by title
 4. by number of images
+
 *example:* "/posts?sortBy=title
+
 ***Search***
 Searches for a given string that can be found either in the text content, or in the author's name, or in the category name.
+
 *example:* "/posts?search=hello
 
 ## Categories
 
 * /createCategory - POST-request for creation category (only available for admins)
+
 Request body should contain "name" and may contain "parentCategoryId"
 
 * /editCategory - POST-request for editing category (only available for admins)
+
 Request body should contain "categoryId" and may contain "name" and "parentCategoryId"
 
 * /categories - GET-request for getting a list of categories
@@ -79,5 +93,6 @@ Request body should contain "categoryId" and may contain "name" and "parentCateg
 ## Images
 
 * /getImageById - GET-request for getting an image by id
+
 *example:* /posts?id=1
 
