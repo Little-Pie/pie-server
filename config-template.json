@@ -1,0 +1,9 @@
+{
+    "limit":10,
+    "offset":0,
+    "connectHost":"localhost",
+    "connectDatabase":"",
+    "connectUser":"",
+    "connectPassword":"",
+    "loggingLevel":"Release"
+}
