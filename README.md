@@ -6,25 +6,27 @@
 ## Installation:
 * Clone repository
 * Rename "config-template.json" to "config.json"
-* Add data for connection to PostreSQL database in "config.json"
+* Add data for connection to PostgreSQL database in "config.json"
 * You can change loggingLevel in "config.json" to Debug, Release, Warning or Error
 
 ## Structure:
-Module Main reads config, parses it and case of success connects to PostgreSQL database and starts app server, which is based on Warp.
+Module Main reads config, parses it and case of success connects to PostgreSQL database and starts the server, which is based on Warp.
 
 Besides Main contains functions to run migrations, to open and to close TXT-file for logging. Filling tables received from migrations with fixtures for testind server can be initialized by command line argument "f".
 
-Main runs an application which is imported from module Routing. This application contains all possible endpoints that can be called by user. There modules for handling business logic of every endpoint.
+Main runs an application which is imported from module Routing. This application contains all possible endpoints that can be called by user. There are modules for handling business logic of every endpoint.
 
-The ReaderT Design Pattern and Handle Pattern were used in the development of the code.
+"ReaderT Design Pattern" and "Handle Pattern" were used in the development of the code.
 
 Handling of JSON-files and config is carried out using libraries "aeson" and "aeson-pretty".
 
-The business logic of the project is covered by unit-tests, which are carried out using the library "hspec".
+The business logic of the project is covered by unit-tests, which are implemented by using the library "hspec".
 
-Libraries are used to work with the PostgreSQL database: "postgresql-simple" and "postgresql-simple-migration".
+Libraries used to work with the PostgreSQL database: "postgresql-simple" and "postgresql-simple-migration".
 
 The server also uses hashing to securely store user passwords. Library "cryptonite" is used for that.
+
+Method "Basic Auth" is used for authentication.
 
 ## Server API (endpoints):
 
