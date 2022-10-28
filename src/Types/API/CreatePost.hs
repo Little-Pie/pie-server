@@ -2,6 +2,7 @@
 
 module Types.API.CreatePost where
 
+import Control.Monad (mzero)
 import Data.Aeson (FromJSON, Value (..), parseJSON, (.:))
 
 data CreatePostRequest = CreatePostRequest
@@ -21,3 +22,4 @@ instance FromJSON CreatePostRequest where
       <*> createPostRequest .: "isPublished"
       <*> createPostRequest .: "base64Images"
       <*> createPostRequest .: "contentTypes"
+  parseJSON _ = mzero

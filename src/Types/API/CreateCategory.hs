@@ -2,6 +2,7 @@
 
 module Types.API.CreateCategory where
 
+import Control.Monad (mzero)
 import Data.Aeson (FromJSON, Value (..), parseJSON, (.:), (.:?))
 
 data CreateCategoryRequest = CreateCategoryRequest
@@ -13,3 +14,4 @@ instance FromJSON CreateCategoryRequest where
   parseJSON (Object createCategoryRequest) =
     CreateCategoryRequest <$> createCategoryRequest .: "name"
       <*> createCategoryRequest .:? "parentCategoryId"
+  parseJSON _ = mzero

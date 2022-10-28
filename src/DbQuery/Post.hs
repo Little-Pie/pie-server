@@ -4,6 +4,7 @@
 
 module DbQuery.Post where
 
+import Control.Monad (void)
 import qualified Data.ByteString.Char8 as BS
 import Database.PostgreSQL.Simple (Connection, Only (..), execute, executeMany, query, returning)
 import Database.PostgreSQL.Simple.Types (Query (..))
@@ -17,23 +18,22 @@ insertNewPost conn title text categoryId userId isPublished base64Images content
     [] -> putStrLn "Something went wrong: post wasn't created"
     (postId : _) -> do
       let imageRows = zipWith (postId,,) base64Images contentTypes
-      executeMany conn "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)" imageRows
-      pure ()
+      void $ executeMany conn "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)" imageRows
 
 editPost :: Connection -> String -> String -> Int -> Int -> Bool -> [String] -> [String] -> IO ()
 editPost conn title text categoryId postId isPublished base64Images contentTypes = do
-  execute conn "UPDATE posts SET (title,text,\"isPublished\",\"categoryId\") = (?,?,?,?) WHERE id = (?)" (title, text, isPublished, categoryId, postId)
+  void $ execute conn "UPDATE posts SET (title,text,\"isPublished\",\"categoryId\") = (?,?,?,?) WHERE id = (?)" (title, text, isPublished, categoryId, postId)
   case base64Images of
     [] -> pure ()
     _ -> do
       let imageRows = zipWith (postId,,) base64Images contentTypes
-      execute conn "DELETE FROM images WHERE \"postId\" = (?)" (Only postId)
-      executeMany conn "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)" imageRows
-      pure ()
+      void $ execute conn "DELETE FROM images WHERE \"postId\" = (?)" (Only postId)
+      void $ executeMany conn "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)" imageRows
 
 getPostById :: Connection -> Int -> IO [Post]
 getPostById conn postId = query conn "select * from posts where id=(?)" (Only postId)
 
+initQuery :: Query
 initQuery = "SELECT posts.*,users.name,categories.name FROM posts JOIN users ON posts.\"authorId\" = users.id JOIN categories ON posts.\"categoryId\" = categories.id LEFT OUTER JOIN images ON posts.id = images.\"postId\" WHERE \"isPublished\" = true "
 
 getSortBy :: Maybe BS.ByteString -> Query
@@ -65,6 +65,7 @@ createFilterDBReq filt filterParam = case filt of
   "categoryId" -> " AND \"categoryId\" = " <> Query filterParam <> " "
   "title" -> " AND title like '%" <> Query filterParam <> "%' "
   "text" -> " AND text like '%" <> Query filterParam <> "%' "
+  _ -> ""
 
 showPosts :: Connection -> Int -> Int -> [(BS.ByteString, BS.ByteString)] -> Maybe BS.ByteString -> Maybe BS.ByteString -> IO [GetPosts]
 showPosts conn limit' offset' queryFilters mbQuerySortBy mbSearch = do

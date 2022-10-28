@@ -5,16 +5,16 @@ module Helpers where
 
 import Config (App, Config (..), Environment (..))
 import Control.Monad.Reader (ask, liftIO, runReaderT)
-import Data.Aeson (FromJSON, Value (..), decode, decodeStrict, parseJSON, (.:))
+import Data.Aeson (FromJSON, decode)
 import qualified Data.ByteString.Base64 as BASE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC
-import Database.PostgreSQL.Simple as PSQL (ConnectInfo (..), Connection, Only (..), defaultConnectInfo, execute_)
+import Database.PostgreSQL.Simple as PSQL (ConnectInfo (..), Connection, defaultConnectInfo)
 import DbQuery.User (getUserByLogin)
 import Hash (makeStringHash)
 import Logging (LoggingLevel (..))
-import Network.HTTP.Types (Query, Status, badRequest400, hContentType, notFound404, status200, status500, statusCode, unauthorized401)
+import Network.HTTP.Types (Status, badRequest400, hContentType, notFound404, status200, status500, statusCode, unauthorized401)
 import Network.Wai (Request, Response, ResponseReceived, rawPathInfo, rawQueryString, responseLBS, responseStatus)
 import System.IO (Handle, hFlush, hPutStrLn)
 import Types.Entities.User (User (..))
@@ -75,6 +75,7 @@ authorize conn mbBase64LoginAndPassword = case mbBase64LoginAndPassword of
           if login' <> ":" <> BS.pack (makeStringHash $ BS.unpack password') == loginPassword'
             then pure ("User is authorized", Just user)
             else pure ("Wrong password", Nothing)
+        _ -> pure ("Something went wrong", Nothing)
 
 getQueryFilters :: [(BS.ByteString, Maybe BS.ByteString)] -> [(BS.ByteString, BS.ByteString)]
 getQueryFilters queryItems =
@@ -90,7 +91,7 @@ filters :: [BS.ByteString]
 filters = ["createdAt", "createdUntil", "createdSince", "author", "categoryId", "title", "text"]
 
 lookup' :: BS.ByteString -> [(BS.ByteString, Maybe BS.ByteString)] -> Maybe BS.ByteString
-lookup' key' [] = Nothing
+lookup' _ [] = Nothing
 lookup' key' ((key, value) : items)
   | key' == key = value
   | otherwise = lookup' key' items

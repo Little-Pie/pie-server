@@ -11,7 +11,6 @@ import qualified DbQuery.Image as DB
 import Endpoints.Handlers.GetImageById as Handle (GetImageByIdResult (..), Handle (..), getImageByIdHandler)
 import Helpers (responseBadRequest, responseImage)
 import Network.Wai (Response)
-import Types.Entities.Image (Image (..))
 
 getImageById :: Int -> App Response
 getImageById imageId = do

@@ -2,6 +2,7 @@
 
 module Types.API.EditPost where
 
+import Control.Monad (mzero)
 import Data.Aeson (FromJSON, Value (..), parseJSON, (.:), (.:?))
 
 data EditPostRequest = EditPostRequest
@@ -23,3 +24,4 @@ instance FromJSON EditPostRequest where
       <*> editPostRequest .:? "isPublished"
       <*> editPostRequest .:? "base64Images"
       <*> editPostRequest .:? "contentTypes"
+  parseJSON _ = mzero

@@ -7,17 +7,15 @@ import Config (App, Environment (..))
 import Control.Monad.Reader (ask, liftIO)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.Char8 as LBSC
 import Data.Maybe (fromMaybe)
-import Database.PostgreSQL.Simple (Connection)
 import qualified DbQuery.Category as DBC
 import qualified DbQuery.Image as DBI
 import qualified DbQuery.Post as DBP
 import qualified DbQuery.User as DBU
 import Endpoints (createCategory, createPost, createUser, editCategory, editPost, getImageById)
 import Helpers (getQueryFilters, lookup', responseBadRequest, responseNotFound, responseOk, withAuthorization, withParsedRequest)
-import Network.HTTP.Types (Header, RequestHeaders, methodGet, methodPost)
-import Network.Wai (Application, Request, Response, ResponseReceived, lazyRequestBody, queryString, rawPathInfo, rawQueryString, requestHeaders, requestMethod)
+import Network.HTTP.Types (RequestHeaders, methodGet, methodPost)
+import Network.Wai (Request, Response, ResponseReceived, lazyRequestBody, queryString, rawPathInfo, requestHeaders, requestMethod)
 import Text.Read (readMaybe)
 import qualified Types.API.PostWithImages as API
 import qualified Types.Entities.GetPosts as GP
@@ -102,14 +100,13 @@ application req respond
     liftIO $ respond response
   where
     queryItems = queryString req
-    query' = rawQueryString req
     path = BS.tail $ rawPathInfo req
     bodyIO = lazyRequestBody req
     headers = requestHeaders req
     mbBase64LoginAndPassword = getBase64LoginAndPassword headers
 
     getBase64LoginAndPassword :: RequestHeaders -> Maybe BS.ByteString
-    getBase64LoginAndPassword headers = case headers of
+    getBase64LoginAndPassword someHeaders = case someHeaders of
       [] -> Nothing
       ((headerName, bStr) : xs) ->
         if headerName == "Authorization"

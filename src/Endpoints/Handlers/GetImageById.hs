@@ -19,7 +19,7 @@ getImageByIdHandler Handle {..} imageId = do
   case dbImage of
     [] -> pure ImageNotExist
     (image : _) -> case decode $ BS.pack $ base64Image image of
-      Left err -> pure DecodeError
+      Left _ -> pure DecodeError
       Right decodedImage -> do
         let contentType' = contentType image
         pure $ Success decodedImage contentType'

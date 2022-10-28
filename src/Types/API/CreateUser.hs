@@ -2,6 +2,7 @@
 
 module Types.API.CreateUser where
 
+import Control.Monad (mzero)
 import Data.Aeson (FromJSON, Value (..), parseJSON, (.:))
 
 data CreateUserRequest = CreateUserRequest
@@ -19,3 +20,4 @@ instance FromJSON CreateUserRequest where
       <*> createUserRequest .: "password"
       <*> createUserRequest .: "isAdmin"
       <*> createUserRequest .: "isAuthor"
+  parseJSON _ = mzero

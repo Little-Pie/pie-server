@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Types.API.PostWithImages where
 
@@ -19,7 +20,7 @@ data PostWithImages = PostWithImages
   }
 
 instance ToJSON PostWithImages where
-  toJSON (PostWithImages postId title text categoryId createdAt authorId isPublished authorName categoryName base64Images) =
+  toJSON (PostWithImages {..}) =
     object
       [ "id" .= postId,
         "title" .= title,
@@ -30,5 +31,5 @@ instance ToJSON PostWithImages where
         "author" .= authorId,
         "authorName" .= authorName,
         "isPublished" .= isPublished,
-        "base64Images" .= base64Images
+        "imagesURL" .= imagesURL
       ]

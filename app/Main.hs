@@ -5,15 +5,15 @@ module Main where
 
 import Config (Config (..), Environment (..), getConfig)
 import Control.Exception (SomeException)
-import Control.Monad.Reader (liftIO, runReaderT)
+import Control.Monad (void)
+import Control.Monad.Reader (runReaderT)
 import Database.PostgreSQL.Simple (Connection, close, connect)
 import Database.PostgreSQL.Simple.Migration (MigrationCommand (..), MigrationContext (..), runMigration)
-import DbQuery.Test (deleteFromTables, dropTables, fillTables)
-import Hash (makeStringHash)
+import DbQuery.Test (dropTables, fillTables)
 import Helpers (localPG, printError, responsePlainText, withLogging)
 import Network.HTTP.Types (status500)
 import Network.Wai (Application, Request, Response)
-import Network.Wai.Handler.Warp (Settings, defaultSettings, runSettings, setOnException, setOnExceptionResponse, setPort)
+import Network.Wai.Handler.Warp (defaultSettings, runSettings, setOnException, setOnExceptionResponse, setPort)
 import Routing (application)
 import System.Environment (getArgs)
 import System.IO (IOMode (..), hClose, openFile)
@@ -39,20 +39,19 @@ main = do
     appWithEnv env request respond = runReaderT (withLogging application request respond) env
 
 exceptionSettings :: Environment -> Maybe Request -> SomeException -> IO ()
-exceptionSettings env mbReq exception = runReaderT (printError $ show exception) env
+exceptionSettings env _ exception = runReaderT (printError $ show exception) env
 
 exceptionResponseSettings :: SomeException -> Response
-exceptionResponseSettings exception = responsePlainText status500 "Something went wrong"
+exceptionResponseSettings _ = responsePlainText status500 "Something went wrong"
 
 execMigrations :: Connection -> IO ()
 execMigrations conn = do
-  schemaRes <-
+  void $
     runMigration $
       MigrationContext MigrationInitialization True conn
-  res <-
+  void $
     runMigration $
       MigrationContext (MigrationDirectory "migrations") True conn
-  pure ()
 
 runMigrations :: [String] -> Connection -> IO ()
 runMigrations ["f"] conn = do

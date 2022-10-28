@@ -2,6 +2,7 @@
 
 module DbQuery.User where
 
+import Control.Monad (void)
 import Database.PostgreSQL.Simple (Connection, Only (..), execute, query, query_)
 import Types.Entities.User (User)
 
@@ -13,8 +14,7 @@ getUserByLogin conn login = query conn "SELECT * FROM users WHERE login=(?)" (On
 
 insertNewUser :: Connection -> String -> String -> String -> Bool -> Bool -> IO ()
 insertNewUser conn name login password isAdmin isAuthor = do
-  execute conn "INSERT INTO users (name,login,password,\"isAdmin\",\"isAuthor\") VALUES (?,?,?,?,?)" (name, login, password, isAdmin, isAuthor)
-  pure ()
+  void $ execute conn "INSERT INTO users (name,login,password,\"isAdmin\",\"isAuthor\") VALUES (?,?,?,?,?)" (name, login, password, isAdmin, isAuthor)
 
 showUsers :: Connection -> Int -> Int -> IO [User]
 showUsers conn limit offset = query conn "select * from users limit (?) offset (?)" (limit, offset)

@@ -2,7 +2,6 @@
 
 module Endpoints.Handlers.EditPost where
 
-import Control.Applicative ((<|>))
 import Data.Maybe (fromMaybe)
 import Types.API.EditPost as API (EditPostRequest (..))
 import qualified Types.Entities.Category as C

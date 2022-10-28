@@ -2,6 +2,7 @@
 
 module Types.API.EditCategory where
 
+import Control.Monad (mzero)
 import Data.Aeson (FromJSON, Value (..), parseJSON, (.:), (.:?))
 
 data EditCategoryRequest = EditCategoryRequest
@@ -15,3 +16,4 @@ instance FromJSON EditCategoryRequest where
     EditCategoryRequest <$> editCategoryRequest .: "categoryId"
       <*> editCategoryRequest .:? "name"
       <*> editCategoryRequest .:? "parentCategoryId"
+  parseJSON _ = mzero

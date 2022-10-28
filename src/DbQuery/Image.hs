@@ -3,6 +3,7 @@
 module DbQuery.Image where
 
 import Database.PostgreSQL.Simple (Connection, Only (..), query)
+import Database.PostgreSQL.Simple.Types (Query)
 import Types.Entities.Image (Image)
 
 getImageById :: Connection -> Int -> IO [Image]
@@ -15,11 +16,13 @@ getImagesByPostIds conn postIds =
     Nothing -> pure []
     Just imagesQuery -> query conn imagesQuery postIds
 
+initQuery :: Query
 initQuery = "SELECT * FROM images"
 
-addPostFilters q [] = Nothing
-addPostFilters q postIds = helper (q <> " WHERE ") postIds
+addPostFilters :: Query -> [Int] -> Maybe Query
+addPostFilters _ [] = Nothing
+addPostFilters someQuery postIds = helper (someQuery <> " WHERE ") postIds
   where
     helper q [] = Just q
-    helper q [postId] = Just (q <> "\"postId\" = (?)")
-    helper q (postId : xs) = helper (q <> "\"postId\" = (?) OR ") xs
+    helper q [_] = Just (q <> "\"postId\" = (?)")
+    helper q (_ : xs) = helper (q <> "\"postId\" = (?) OR ") xs

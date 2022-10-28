@@ -4,7 +4,6 @@
 module Types.Entities.Category where
 
 import Data.Aeson (ToJSON, object, toJSON, (.=))
-import Data.Time.Clock (UTCTime)
 import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
 
 data Category = Category
