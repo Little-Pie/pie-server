@@ -1,9 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.API.CreateUser where
 
-import Control.Monad (mzero)
-import Data.Aeson (FromJSON, Value (..), parseJSON, (.:))
+import Data.Aeson (FromJSON)
+import GHC.Generics (Generic)
 
 data CreateUserRequest = CreateUserRequest
   { name :: String,
@@ -12,12 +13,4 @@ data CreateUserRequest = CreateUserRequest
     isAdmin :: Bool,
     isAuthor :: Bool
   }
-
-instance FromJSON CreateUserRequest where
-  parseJSON (Object createUserRequest) =
-    CreateUserRequest <$> createUserRequest .: "name"
-      <*> createUserRequest .: "login"
-      <*> createUserRequest .: "password"
-      <*> createUserRequest .: "isAdmin"
-      <*> createUserRequest .: "isAuthor"
-  parseJSON _ = mzero
+  deriving (Generic, FromJSON)

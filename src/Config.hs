@@ -1,13 +1,15 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Config where
 
-import Control.Monad (mzero)
 import Control.Monad.Reader (ReaderT)
-import Data.Aeson (FromJSON, Value (..), decodeStrict, parseJSON, (.:))
+import Data.Aeson (FromJSON, decodeStrict)
 import qualified Data.ByteString.Char8 as BS
 import Database.PostgreSQL.Simple (Connection)
+import GHC.Generics (Generic)
 import Logging (LoggingLevel)
 import System.IO (Handle)
 
@@ -20,18 +22,7 @@ data Config = Config
     connectPassword :: String,
     loggingLevel :: LoggingLevel
   }
-
-instance FromJSON Config where
-  parseJSON (Object config) =
-    Config
-      <$> config .: "limit"
-      <*> config .: "offset"
-      <*> config .: "connectHost"
-      <*> config .: "connectDatabase"
-      <*> config .: "connectUser"
-      <*> config .: "connectPassword"
-      <*> config .: "loggingLevel"
-  parseJSON _ = mzero
+  deriving (Generic, FromJSON)
 
 getConfig :: IO (Maybe Config)
 getConfig = do

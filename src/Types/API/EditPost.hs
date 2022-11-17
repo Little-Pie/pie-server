@@ -1,9 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.API.EditPost where
 
-import Control.Monad (mzero)
-import Data.Aeson (FromJSON, Value (..), parseJSON, (.:), (.:?))
+import Data.Aeson (FromJSON)
+import GHC.Generics (Generic)
 
 data EditPostRequest = EditPostRequest
   { postId :: Int,
@@ -14,14 +15,4 @@ data EditPostRequest = EditPostRequest
     base64Images :: Maybe [String],
     contentTypes :: Maybe [String]
   }
-
-instance FromJSON EditPostRequest where
-  parseJSON (Object editPostRequest) =
-    EditPostRequest <$> editPostRequest .: "postId"
-      <*> editPostRequest .:? "title"
-      <*> editPostRequest .:? "text"
-      <*> editPostRequest .:? "categoryId"
-      <*> editPostRequest .:? "isPublished"
-      <*> editPostRequest .:? "base64Images"
-      <*> editPostRequest .:? "contentTypes"
-  parseJSON _ = mzero
+  deriving (Generic, FromJSON)

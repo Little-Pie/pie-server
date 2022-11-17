@@ -1,10 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.Entities.Image where
 
-import Data.Aeson (ToJSON, object, toJSON, (.=))
-import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
+import Data.Aeson (ToJSON)
+import Database.PostgreSQL.Simple.FromRow (FromRow)
+import GHC.Generics (Generic)
 
 data Image = Image
   { imageId :: Int,
@@ -12,16 +13,4 @@ data Image = Image
     base64Image :: String,
     contentType :: String
   }
-  deriving (Eq, Show)
-
-instance ToJSON Image where
-  toJSON (Image {..}) =
-    object
-      [ "imageId" .= imageId,
-        "postId" .= postId,
-        "base64Image" .= base64Image,
-        "contentType" .= contentType
-      ]
-
-instance FromRow Image where
-  fromRow = Image <$> field <*> field <*> field <*> field
+  deriving (Eq, Show, Generic, ToJSON, FromRow)

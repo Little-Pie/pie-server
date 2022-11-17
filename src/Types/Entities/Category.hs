@@ -1,24 +1,15 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.Entities.Category where
 
-import Data.Aeson (ToJSON, object, toJSON, (.=))
-import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
+import Data.Aeson (ToJSON)
+import Database.PostgreSQL.Simple.FromRow (FromRow)
+import GHC.Generics (Generic)
 
 data Category = Category
   { categoryId :: Int,
     name :: String,
     parentCategoryId :: Maybe Int
   }
-
-instance ToJSON Category where
-  toJSON (Category {..}) =
-    object
-      [ "categoryId" .= categoryId,
-        "name" .= name,
-        "parentCategoryId" .= parentCategoryId
-      ]
-
-instance FromRow Category where
-  fromRow = Category <$> field <*> field <*> field
+  deriving (Generic, ToJSON, FromRow)

@@ -1,9 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.API.CreatePost where
 
-import Control.Monad (mzero)
-import Data.Aeson (FromJSON, Value (..), parseJSON, (.:))
+import Data.Aeson (FromJSON)
+import GHC.Generics (Generic)
 
 data CreatePostRequest = CreatePostRequest
   { title :: String,
@@ -13,13 +14,4 @@ data CreatePostRequest = CreatePostRequest
     base64Images :: [String],
     contentTypes :: [String]
   }
-
-instance FromJSON CreatePostRequest where
-  parseJSON (Object createPostRequest) =
-    CreatePostRequest <$> createPostRequest .: "title"
-      <*> createPostRequest .: "text"
-      <*> createPostRequest .: "categoryId"
-      <*> createPostRequest .: "isPublished"
-      <*> createPostRequest .: "base64Images"
-      <*> createPostRequest .: "contentTypes"
-  parseJSON _ = mzero
+  deriving (Generic, FromJSON)

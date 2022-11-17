@@ -1,11 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.Entities.User where
 
-import Data.Aeson (ToJSON, object, toJSON, (.=))
+import Data.Aeson (ToJSON)
 import Data.Time.Clock (UTCTime)
-import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
+import Database.PostgreSQL.Simple.FromRow (FromRow)
+import GHC.Generics (Generic)
 
 data User = User
   { userId :: Int,
@@ -16,17 +17,4 @@ data User = User
     isAdmin :: Bool,
     isAuthor :: Bool
   }
-
-instance ToJSON User where
-  toJSON (User {..}) =
-    object
-      [ "id" .= userId,
-        "name" .= name,
-        "login" .= login,
-        "createdAt" .= createdAt,
-        "isAdmin" .= isAdmin,
-        "isAuthor" .= isAuthor
-      ]
-
-instance FromRow User where
-  fromRow = User <$> field <*> field <*> field <*> field <*> field <*> field <*> field
+  deriving (Generic, ToJSON, FromRow)

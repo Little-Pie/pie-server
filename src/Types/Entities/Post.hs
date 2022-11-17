@@ -1,11 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.Entities.Post where
 
-import Data.Aeson (ToJSON, object, toJSON, (.=))
+import Data.Aeson (ToJSON)
 import Data.Time.Clock (UTCTime)
-import Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
+import Database.PostgreSQL.Simple.FromRow (FromRow)
+import GHC.Generics (Generic)
 
 data Post = Post
   { postId :: Int,
@@ -16,18 +17,4 @@ data Post = Post
     authorId :: Int,
     isPublished :: Bool
   }
-
-instance ToJSON Post where
-  toJSON (Post {..}) =
-    object
-      [ "id" .= postId,
-        "title" .= title,
-        "createdAt" .= createdAt,
-        "text" .= text,
-        "categoryId" .= categoryId,
-        "author" .= authorId,
-        "isPublished" .= isPublished
-      ]
-
-instance FromRow Post where
-  fromRow = Post <$> field <*> field <*> field <*> field <*> field <*> field <*> field
+  deriving (Generic, ToJSON, FromRow)

@@ -1,10 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.API.PostWithImages where
 
-import Data.Aeson (ToJSON, object, toJSON, (.=))
+import Data.Aeson (ToJSON)
 import Data.Time.Clock (UTCTime)
+import GHC.Generics (Generic)
 
 data PostWithImages = PostWithImages
   { postId :: Int,
@@ -18,18 +19,4 @@ data PostWithImages = PostWithImages
     categoryName :: String,
     imagesURL :: [String]
   }
-
-instance ToJSON PostWithImages where
-  toJSON (PostWithImages {..}) =
-    object
-      [ "id" .= postId,
-        "title" .= title,
-        "createdAt" .= createdAt,
-        "text" .= text,
-        "categoryId" .= categoryId,
-        "categoryName" .= categoryName,
-        "author" .= authorId,
-        "authorName" .= authorName,
-        "isPublished" .= isPublished,
-        "imagesURL" .= imagesURL
-      ]
+  deriving (Generic, ToJSON)

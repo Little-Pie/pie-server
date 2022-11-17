@@ -1,19 +1,14 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.API.EditCategory where
 
-import Control.Monad (mzero)
-import Data.Aeson (FromJSON, Value (..), parseJSON, (.:), (.:?))
+import Data.Aeson (FromJSON)
+import GHC.Generics (Generic)
 
 data EditCategoryRequest = EditCategoryRequest
   { categoryId :: Int,
     name :: Maybe String,
     parentCategoryId :: Maybe Int
   }
-
-instance FromJSON EditCategoryRequest where
-  parseJSON (Object editCategoryRequest) =
-    EditCategoryRequest <$> editCategoryRequest .: "categoryId"
-      <*> editCategoryRequest .:? "name"
-      <*> editCategoryRequest .:? "parentCategoryId"
-  parseJSON _ = mzero
+  deriving (Generic, FromJSON)

@@ -1,17 +1,13 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.API.CreateCategory where
 
-import Control.Monad (mzero)
-import Data.Aeson (FromJSON, Value (..), parseJSON, (.:), (.:?))
+import Data.Aeson (FromJSON)
+import GHC.Generics (Generic)
 
 data CreateCategoryRequest = CreateCategoryRequest
   { name :: String,
     parentCategoryId :: Maybe Int
   }
-
-instance FromJSON CreateCategoryRequest where
-  parseJSON (Object createCategoryRequest) =
-    CreateCategoryRequest <$> createCategoryRequest .: "name"
-      <*> createCategoryRequest .:? "parentCategoryId"
-  parseJSON _ = mzero
+  deriving (FromJSON, Generic)
