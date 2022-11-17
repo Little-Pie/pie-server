@@ -3,9 +3,22 @@
 module Endpoints.CreateCategory where
 
 import Data.Functor.Identity (Identity)
-import Endpoints.Handlers.CreateCategory (CreateCategoryResult (..), Handle (..), createCategoryHandler)
-import Fixtures (category, userAdminAuthor, userNotAdminAuthor)
-import Test.Hspec (SpecWith, describe, it, shouldBe)
+import Endpoints.Handlers.CreateCategory
+  ( CreateCategoryResult (..),
+    Handle (..),
+    createCategoryHandler,
+  )
+import Fixtures
+  ( category,
+    userAdminAuthor,
+    userNotAdminAuthor,
+  )
+import Test.Hspec
+  ( SpecWith,
+    describe,
+    it,
+    shouldBe,
+  )
 import Types.API.CreateCategory (CreateCategoryRequest (..))
 import Types.Entities.Category (Category (..))
 import Types.Entities.User (User (..))
@@ -27,20 +40,48 @@ createCategoryTest :: SpecWith ()
 createCategoryTest =
   describe "Category creation tests" $ do
     it "Should successfuly create general category when requested by admin" $ do
-      let res = createCategoryHandler handle userAdminAuthor createCategoryRequest {Types.API.CreateCategory.parentCategoryId = Nothing}
+      let res =
+            createCategoryHandler
+              handle
+              userAdminAuthor
+              createCategoryRequest {Types.API.CreateCategory.parentCategoryId = Nothing}
       res `shouldBe` pure Success
     it "Should successfuly create category when requested by admin" $ do
-      let res = createCategoryHandler handle userAdminAuthor createCategoryRequest
+      let res =
+            createCategoryHandler
+              handle
+              userAdminAuthor
+              createCategoryRequest
       res `shouldBe` pure Success
     it "Should return bad request in case general category with such name already exists" $ do
-      let res = createCategoryHandler handle {getGeneralCategoryByName = \_ -> pure [category {Types.Entities.Category.parentCategoryId = Nothing}]} userAdminAuthor createCategoryRequest {Types.API.CreateCategory.parentCategoryId = Nothing}
+      let res =
+            createCategoryHandler
+              handle
+                { getGeneralCategoryByName = \_ ->
+                    pure
+                      [category {Types.Entities.Category.parentCategoryId = Nothing}]
+                }
+              userAdminAuthor
+              createCategoryRequest {Types.API.CreateCategory.parentCategoryId = Nothing}
       res `shouldBe` pure NameIsTaken
     it "Should return bad request in case parent category with such id does not exist" $ do
-      let res = createCategoryHandler handle {getCategoryById = \_ -> pure []} userAdminAuthor createCategoryRequest
+      let res =
+            createCategoryHandler
+              handle {getCategoryById = \_ -> pure []}
+              userAdminAuthor
+              createCategoryRequest
       res `shouldBe` pure ParentCategoryNotExist
     it "Should return bad request in case category with such name already exists" $ do
-      let res = createCategoryHandler handle {getCategoryByNameAndParent = \_ _ -> pure [category]} userAdminAuthor createCategoryRequest
+      let res =
+            createCategoryHandler
+              handle {getCategoryByNameAndParent = \_ _ -> pure [category]}
+              userAdminAuthor
+              createCategoryRequest
       res `shouldBe` pure NameIsTaken
     it "Should return not found in case user not an admin" $ do
-      let res = createCategoryHandler handle userNotAdminAuthor createCategoryRequest
+      let res =
+            createCategoryHandler
+              handle
+              userNotAdminAuthor
+              createCategoryRequest
       res `shouldBe` pure NotFound

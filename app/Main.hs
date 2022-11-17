@@ -8,13 +8,23 @@ import Control.Exception (SomeException)
 import Control.Monad (void)
 import Control.Monad.Reader (runReaderT)
 import Database.PostgreSQL.Simple (Connection, close, connect)
-import Database.PostgreSQL.Simple.Migration (MigrationCommand (..), MigrationContext (..), runMigration)
+import Database.PostgreSQL.Simple.Migration
+  ( MigrationCommand (..),
+    MigrationContext (..),
+    runMigration,
+  )
 import DbQuery.Test (dropTables, fillTables)
 import Helpers (localPG, printLog, responsePlainText, withLogging)
 import Logging (LoggingLevel (..))
 import Network.HTTP.Types (status500)
 import Network.Wai (Application, Request, Response)
-import Network.Wai.Handler.Warp (defaultSettings, runSettings, setOnException, setOnExceptionResponse, setPort)
+import Network.Wai.Handler.Warp
+  ( defaultSettings,
+    runSettings,
+    setOnException,
+    setOnExceptionResponse,
+    setPort,
+  )
 import Routing (application)
 import System.Environment (getArgs)
 import System.IO (IOMode (..), hClose, openFile)
@@ -32,7 +42,9 @@ main = do
       runMigrations args conn
       putStrLn "Serving..."
       runReaderT (printLog Debug "Serving...") env
-      let settings = setOnExceptionResponse exceptionResponseSettings $ setOnException (exceptionSettings env) $ setPort 4000 defaultSettings
+      let settings =
+            setOnExceptionResponse exceptionResponseSettings $
+              setOnException (exceptionSettings env) $ setPort 4000 defaultSettings
       runSettings settings $ appWithEnv env
       hClose logHandle
       close conn

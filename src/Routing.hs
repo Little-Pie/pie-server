@@ -12,10 +12,38 @@ import qualified DbQuery.Category as DBC
 import qualified DbQuery.Image as DBI
 import qualified DbQuery.Post as DBP
 import qualified DbQuery.User as DBU
-import Endpoints (createCategory, createPost, createUser, editCategory, editPost, getImageById)
-import Helpers (getQueryFilters, lookup', responseBadRequest, responseNotFound, responseOk, withAuthorization, withParsedRequest)
-import Network.HTTP.Types (RequestHeaders, methodGet, methodPost)
-import Network.Wai (Request, Response, ResponseReceived, lazyRequestBody, queryString, rawPathInfo, requestHeaders, requestMethod)
+import Endpoints
+  ( createCategory,
+    createPost,
+    createUser,
+    editCategory,
+    editPost,
+    getImageById,
+  )
+import Helpers
+  ( getQueryFilters,
+    lookup',
+    responseBadRequest,
+    responseNotFound,
+    responseOk,
+    withAuthorization,
+    withParsedRequest,
+  )
+import Network.HTTP.Types
+  ( RequestHeaders,
+    methodGet,
+    methodPost,
+  )
+import Network.Wai
+  ( Request,
+    Response,
+    ResponseReceived,
+    lazyRequestBody,
+    queryString,
+    rawPathInfo,
+    requestHeaders,
+    requestMethod,
+  )
 import Text.Read (readMaybe)
 import qualified Types.API.PostWithImages as API
 import qualified Types.Entities.GetPosts as GP
@@ -64,17 +92,33 @@ application req respond
             response <- getImageById imageId'
             liftIO $ respond response
       "categories" -> do
-        let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
+        let (mbLimit, mbOffset) =
+              ( (readMaybe . BS.unpack)
+                  =<< lookup' "limit" queryItems ::
+                  Maybe Int,
+                (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int
+              )
         let cfgLimit = limit
-        let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
+        let limit' =
+              if cfgLimit < fromMaybe cfgLimit mbLimit
+                then cfgLimit
+                else fromMaybe cfgLimit mbLimit
         let offset' = fromMaybe offset mbOffset
         categories <- liftIO $ DBC.showCategories conn limit' offset'
         response <- responseOk $ encodePretty categories
         liftIO $ respond response
       "users" -> do
-        let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
+        let (mbLimit, mbOffset) =
+              ( (readMaybe . BS.unpack)
+                  =<< lookup' "limit" queryItems ::
+                  Maybe Int,
+                (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int
+              )
         let cfgLimit = limit
-        let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
+        let limit' =
+              if cfgLimit < fromMaybe cfgLimit mbLimit
+                then cfgLimit
+                else fromMaybe cfgLimit mbLimit
         let offset' = fromMaybe offset mbOffset
         users <- liftIO $ DBU.showUsers conn limit' offset'
         response <- responseOk $ encodePretty users
@@ -83,12 +127,32 @@ application req respond
         let queryFilters = getQueryFilters queryItems
         let mbQuerySortBy = lookup' "sortBy" queryItems
         let mbSearch = lookup' "search" queryItems
-        let (mbLimit, mbOffset) = ((readMaybe . BS.unpack) =<< lookup' "limit" queryItems :: Maybe Int, (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int)
+        let (mbLimit, mbOffset) =
+              ( (readMaybe . BS.unpack)
+                  =<< lookup' "limit" queryItems ::
+                  Maybe Int,
+                (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int
+              )
         let cfgLimit = limit
-        let limit' = if cfgLimit < fromMaybe cfgLimit mbLimit then cfgLimit else fromMaybe cfgLimit mbLimit
+        let limit' =
+              if cfgLimit < fromMaybe cfgLimit mbLimit
+                then cfgLimit
+                else fromMaybe cfgLimit mbLimit
         let offset' = fromMaybe offset mbOffset
-        posts <- liftIO $ DBP.showPosts conn limit' offset' queryFilters mbQuerySortBy mbSearch
-        images <- liftIO $ DBI.getImagesByPostIds conn (map GP.postId posts)
+        posts <-
+          liftIO $
+            DBP.showPosts
+              conn
+              limit'
+              offset'
+              queryFilters
+              mbQuerySortBy
+              mbSearch
+        images <-
+          liftIO $
+            DBI.getImagesByPostIds
+              conn
+              (map GP.postId posts)
         let postsWithImages = mkPostsWithImages posts images
         response <- responseOk $ encodePretty postsWithImages
         liftIO $ respond response
@@ -126,5 +190,7 @@ application req respond
         (GP.isPublished post)
         (GP.authorName post)
         (GP.categoryName post)
-        (map (("http://localhost:4000/getImageById?id=" <>) . show . Image.imageId) $ filter (\image -> Image.postId image == GP.postId post) images) :
+        ( map (("http://localhost:4000/getImageById?id=" <>) . show . Image.imageId) $
+            filter (\image -> Image.postId image == GP.postId post) images
+        ) :
       mkPostsWithImages posts images

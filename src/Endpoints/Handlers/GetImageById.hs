@@ -10,10 +10,17 @@ newtype Handle m = Handle
   { getImageById :: Int -> m [Image]
   }
 
-data GetImageByIdResult = Success BS.ByteString String | ImageNotExist | DecodeError
+data GetImageByIdResult
+  = Success BS.ByteString String
+  | ImageNotExist
+  | DecodeError
   deriving (Eq, Show)
 
-getImageByIdHandler :: (Monad m) => Handle m -> Int -> m GetImageByIdResult
+getImageByIdHandler ::
+  (Monad m) =>
+  Handle m ->
+  Int ->
+  m GetImageByIdResult
 getImageByIdHandler Handle {..} imageId = do
   dbImage <- getImageById imageId
   case dbImage of

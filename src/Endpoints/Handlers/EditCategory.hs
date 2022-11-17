@@ -16,10 +16,21 @@ data Handle m = Handle
     getCategoryByParentId :: [Int] -> m [C.Category]
   }
 
-data EditCategoryResult = Success | NameIsTaken | CategoryNotExist | IllegalParentCategoryId | ParentCategoryNotExist | NotFound
+data EditCategoryResult
+  = Success
+  | NameIsTaken
+  | CategoryNotExist
+  | IllegalParentCategoryId
+  | ParentCategoryNotExist
+  | NotFound
   deriving (Eq, Show)
 
-editCategoryHandler :: (Monad m) => Handle m -> U.User -> EditCategoryRequest -> m EditCategoryResult
+editCategoryHandler ::
+  (Monad m) =>
+  Handle m ->
+  U.User ->
+  EditCategoryRequest ->
+  m EditCategoryResult
 editCategoryHandler Handle {..} user EditCategoryRequest {..} = do
   categories <- getCategoryById categoryId
   case categories of
@@ -36,7 +47,10 @@ editCategoryHandler Handle {..} user EditCategoryRequest {..} = do
             checkParentCategories <- getGeneralCategoryByName (C.name newCategory)
             case checkParentCategories of
               [] -> do
-                editCategory (C.name newCategory) (C.parentCategoryId category) categoryId
+                editCategory
+                  (C.name newCategory)
+                  (C.parentCategoryId category)
+                  categoryId
                 pure Success
               _ -> pure NameIsTaken
           Just parentCategoryId' ->
@@ -51,10 +65,16 @@ editCategoryHandler Handle {..} user EditCategoryRequest {..} = do
                     case parentCategories of
                       [] -> pure ParentCategoryNotExist
                       _ -> do
-                        checkCategories <- getCategoryByNameAndParent (C.name newCategory) parentCategoryId'
+                        checkCategories <-
+                          getCategoryByNameAndParent
+                            (C.name newCategory)
+                            parentCategoryId'
                         case checkCategories of
                           [] -> do
-                            editCategory (C.name newCategory) (C.parentCategoryId newCategory) categoryId
+                            editCategory
+                              (C.name newCategory)
+                              (C.parentCategoryId newCategory)
+                              categoryId
                             pure Success
                           _ -> pure NameIsTaken
         else pure NotFound

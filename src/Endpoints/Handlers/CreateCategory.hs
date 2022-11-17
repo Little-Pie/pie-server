@@ -14,10 +14,19 @@ data Handle m = Handle
     getCategoryById :: Int -> m [C.Category]
   }
 
-data CreateCategoryResult = Success | NameIsTaken | ParentCategoryNotExist | NotFound
+data CreateCategoryResult
+  = Success
+  | NameIsTaken
+  | ParentCategoryNotExist
+  | NotFound
   deriving (Eq, Show)
 
-createCategoryHandler :: (Monad m) => Handle m -> U.User -> CreateCategoryRequest -> m CreateCategoryResult
+createCategoryHandler ::
+  (Monad m) =>
+  Handle m ->
+  U.User ->
+  CreateCategoryRequest ->
+  m CreateCategoryResult
 createCategoryHandler Handle {..} user CreateCategoryRequest {..} =
   if U.isAdmin user
     then case parentCategoryId of

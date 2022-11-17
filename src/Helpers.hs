@@ -10,12 +10,33 @@ import qualified Data.ByteString.Base64 as BASE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy.Char8 as LBSC
-import Database.PostgreSQL.Simple as PSQL (ConnectInfo (..), Connection, defaultConnectInfo)
+import Database.PostgreSQL.Simple as PSQL
+  ( ConnectInfo (..),
+    Connection,
+    defaultConnectInfo,
+  )
 import DbQuery.User (getUserByLogin)
 import Hash (makeStringHash)
 import Logging (LoggingLevel (..))
-import Network.HTTP.Types (Status, badRequest400, hContentType, notFound404, status200, status500, statusCode, unauthorized401)
-import Network.Wai (Request, Response, ResponseReceived, rawPathInfo, rawQueryString, responseLBS, responseStatus)
+import Network.HTTP.Types
+  ( Status,
+    badRequest400,
+    hContentType,
+    notFound404,
+    status200,
+    status500,
+    statusCode,
+    unauthorized401,
+  )
+import Network.Wai
+  ( Request,
+    Response,
+    ResponseReceived,
+    rawPathInfo,
+    rawQueryString,
+    responseLBS,
+    responseStatus,
+  )
 import System.IO (hFlush, hPutStrLn)
 import Types.Entities.User (User (..))
 
@@ -69,7 +90,15 @@ getQueryFilters queryItems =
     filters
 
 filters :: [BS.ByteString]
-filters = ["createdAt", "createdUntil", "createdSince", "author", "categoryId", "title", "text"]
+filters =
+  [ "createdAt",
+    "createdUntil",
+    "createdSince",
+    "author",
+    "categoryId",
+    "title",
+    "text"
+  ]
 
 lookup' :: BS.ByteString -> [(BS.ByteString, Maybe BS.ByteString)] -> Maybe BS.ByteString
 lookup' _ [] = Nothing
@@ -108,7 +137,14 @@ responseImage contentType str = do
   printLog Release "Responded with an image"
   pure $ responseLBS status200 [(hContentType, contentType)] str
 
-withLogging :: (Request -> (Response -> IO ResponseReceived) -> App ResponseReceived) -> Request -> (Response -> IO ResponseReceived) -> App ResponseReceived
+withLogging ::
+  ( Request ->
+    (Response -> IO ResponseReceived) ->
+    App ResponseReceived
+  ) ->
+  Request ->
+  (Response -> IO ResponseReceived) ->
+  App ResponseReceived
 withLogging app req respond = do
   env <- ask
   app req $ \response -> do

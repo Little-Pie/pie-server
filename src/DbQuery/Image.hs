@@ -8,7 +8,10 @@ import Types.Entities.Image (Image)
 
 getImageById :: Connection -> Int -> IO [Image]
 getImageById conn imageId =
-  query conn "SELECT * FROM images WHERE id=(?)" (Only imageId)
+  query
+    conn
+    "SELECT * FROM images WHERE id=(?)"
+    (Only imageId)
 
 getImagesByPostIds :: Connection -> [Int] -> IO [Image]
 getImagesByPostIds conn postIds =

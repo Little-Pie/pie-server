@@ -9,7 +9,15 @@ import qualified Types.Entities.Post as P
 import qualified Types.Entities.User as U
 
 data Handle m = Handle
-  { editPost :: String -> String -> Int -> Int -> Bool -> [String] -> [String] -> m (),
+  { editPost ::
+      String ->
+      String ->
+      Int ->
+      Int ->
+      Bool ->
+      [String] ->
+      [String] ->
+      m (),
     getCategoryById :: Int -> m [C.Category],
     getPostById :: Int -> m [P.Post]
   }
@@ -17,7 +25,12 @@ data Handle m = Handle
 data EditPostResult = Success | PostNotExist | NotAuthor
   deriving (Eq, Show)
 
-editPostHandler :: (Monad m) => Handle m -> U.User -> EditPostRequest -> m EditPostResult
+editPostHandler ::
+  (Monad m) =>
+  Handle m ->
+  U.User ->
+  EditPostRequest ->
+  m EditPostResult
 editPostHandler Handle {..} user EditPostRequest {..} = do
   checkedCategoryId <-
     case categoryId of
@@ -35,13 +48,32 @@ editPostHandler Handle {..} user EditPostRequest {..} = do
         then do
           let newPost =
                 post
-                  { P.title = fromMaybe (P.title post) title,
-                    P.text = fromMaybe (P.text post) text,
-                    P.categoryId = fromMaybe (P.categoryId post) checkedCategoryId,
-                    P.isPublished = fromMaybe (P.isPublished post) isPublished
+                  { P.title =
+                      fromMaybe
+                        (P.title post)
+                        title,
+                    P.text =
+                      fromMaybe
+                        (P.text post)
+                        text,
+                    P.categoryId =
+                      fromMaybe
+                        (P.categoryId post)
+                        checkedCategoryId,
+                    P.isPublished =
+                      fromMaybe
+                        (P.isPublished post)
+                        isPublished
                   }
           let base64Images' = fromMaybe [] base64Images
           let contentTypes' = fromMaybe [] contentTypes
-          editPost (P.title newPost) (P.text newPost) (P.categoryId newPost) postId (P.isPublished newPost) base64Images' contentTypes'
+          editPost
+            (P.title newPost)
+            (P.text newPost)
+            (P.categoryId newPost)
+            postId
+            (P.isPublished newPost)
+            base64Images'
+            contentTypes'
           pure Success
         else pure NotAuthor
