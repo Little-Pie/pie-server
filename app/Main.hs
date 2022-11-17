@@ -10,7 +10,8 @@ import Control.Monad.Reader (runReaderT)
 import Database.PostgreSQL.Simple (Connection, close, connect)
 import Database.PostgreSQL.Simple.Migration (MigrationCommand (..), MigrationContext (..), runMigration)
 import DbQuery.Test (dropTables, fillTables)
-import Helpers (localPG, printError, responsePlainText, withLogging)
+import Helpers (localPG, printLog, responsePlainText, withLogging)
+import Logging (LoggingLevel (..))
 import Network.HTTP.Types (status500)
 import Network.Wai (Application, Request, Response)
 import Network.Wai.Handler.Warp (defaultSettings, runSettings, setOnException, setOnExceptionResponse, setPort)
@@ -30,6 +31,7 @@ main = do
       args <- getArgs
       runMigrations args conn
       putStrLn "Serving..."
+      runReaderT (printLog Debug "Serving...") env
       let settings = setOnExceptionResponse exceptionResponseSettings $ setOnException (exceptionSettings env) $ setPort 4000 defaultSettings
       runSettings settings $ appWithEnv env
       hClose logHandle
@@ -39,7 +41,7 @@ main = do
     appWithEnv env request respond = runReaderT (withLogging application request respond) env
 
 exceptionSettings :: Environment -> Maybe Request -> SomeException -> IO ()
-exceptionSettings env _ exception = runReaderT (printError $ show exception) env
+exceptionSettings env _ exception = runReaderT (printLog Error $ show exception) env
 
 exceptionResponseSettings :: SomeException -> Response
 exceptionResponseSettings _ = responsePlainText status500 "Something went wrong"

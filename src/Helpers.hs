@@ -16,39 +16,20 @@ import Hash (makeStringHash)
 import Logging (LoggingLevel (..))
 import Network.HTTP.Types (Status, badRequest400, hContentType, notFound404, status200, status500, statusCode, unauthorized401)
 import Network.Wai (Request, Response, ResponseReceived, rawPathInfo, rawQueryString, responseLBS, responseStatus)
-import System.IO (Handle, hFlush, hPutStrLn)
+import System.IO (hFlush, hPutStrLn)
 import Types.Entities.User (User (..))
 
-printDebug :: String -> App ()
-printDebug str = do
+printLog :: LoggingLevel -> String -> App ()
+printLog = printLogHelper
+
+printLogHelper :: LoggingLevel -> String -> App ()
+printLogHelper logLvl str = do
   Environment {..} <- ask
-  if loggingLevel < Release
-    then liftIO $ printLog logHandle str
+  if loggingLevel <= logLvl
+    then do
+      liftIO $ hPutStrLn logHandle str
+      liftIO $ hFlush logHandle
     else pure ()
-
-printRelease :: String -> App ()
-printRelease str = do
-  Environment {..} <- ask
-  if loggingLevel < Warning
-    then liftIO $ printLog logHandle str
-    else pure ()
-
-printWarning :: String -> App ()
-printWarning str = do
-  Environment {..} <- ask
-  if loggingLevel < Error
-    then liftIO $ printLog logHandle str
-    else pure ()
-
-printError :: String -> App ()
-printError str = do
-  Environment {..} <- ask
-  liftIO $ printLog logHandle str
-
-printLog :: Handle -> String -> IO ()
-printLog logHandle str = do
-  hPutStrLn logHandle str
-  hFlush logHandle
 
 localPG :: Config -> ConnectInfo
 localPG Config {..} =
@@ -103,19 +84,19 @@ responseOk,
   responseInternalError ::
     LBS.ByteString -> App Response
 responseOk str = do
-  printRelease $ (BS.unpack . LBS.toStrict) str
+  printLog Release $ (BS.unpack . LBS.toStrict) str
   pure $ responsePlainText status200 str
 responseInternalError str = do
-  printError $ (BS.unpack . LBS.toStrict) str
+  printLog Error $ (BS.unpack . LBS.toStrict) str
   pure $ responsePlainText status500 str
 responseNotFound str = do
-  printWarning $ (BS.unpack . LBS.toStrict) str
+  printLog Warning $ (BS.unpack . LBS.toStrict) str
   pure $ responsePlainText notFound404 str
 responseBadRequest str = do
-  printWarning $ (BS.unpack . LBS.toStrict) str
+  printLog Warning $ (BS.unpack . LBS.toStrict) str
   pure $ responsePlainText badRequest400 str
 responseUnauthorized str = do
-  printWarning $ BS.unpack . LBS.toStrict $ str
+  printLog Warning $ BS.unpack . LBS.toStrict $ str
   pure $ responsePlainText unauthorized401 str
 
 responsePlainText :: Status -> LBS.ByteString -> Response
@@ -124,14 +105,14 @@ responsePlainText =
 
 responseImage :: BS.ByteString -> LBS.ByteString -> App Response
 responseImage contentType str = do
-  printRelease "Responded with an image"
+  printLog Release "Responded with an image"
   pure $ responseLBS status200 [(hContentType, contentType)] str
 
 withLogging :: (Request -> (Response -> IO ResponseReceived) -> App ResponseReceived) -> Request -> (Response -> IO ResponseReceived) -> App ResponseReceived
 withLogging app req respond = do
   env <- ask
   app req $ \response -> do
-    runReaderT (printRelease $ statusOf response ++ ": " ++ query) env
+    runReaderT (printLog Release $ statusOf response ++ ": " ++ query) env
     respond response
   where
     query =
