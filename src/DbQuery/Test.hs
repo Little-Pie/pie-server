@@ -7,8 +7,8 @@ import Database.PostgreSQL.Simple (Connection, execute, executeMany, execute_)
 
 dropTables :: Connection -> IO ()
 dropTables conn = do
-  void $ execute_ conn "drop table if exists users"
   void $ execute_ conn "drop table if exists posts"
+  void $ execute_ conn "drop table if exists users"
   void $ execute_ conn "drop table if exists categories"
   void $ execute_ conn "drop table if exists images"
   void $ execute_ conn "drop table if exists schema_migrations"

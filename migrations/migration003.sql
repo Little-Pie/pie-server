@@ -1,4 +1,8 @@
-CREATE TABLE IF NOT EXISTS categories
+CREATE TABLE IF NOT EXISTS posts
   ("id" SERIAL PRIMARY KEY,
-   "name" TEXT NOT NULL,
-   "parentId" INT);
+   "title" TEXT NOT NULL,
+   "text" TEXT NOT NULL,
+   "categoryId" INT NOT NULL REFERENCES categories (id) ON DELETE CASCADE,
+   "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+   "authorId" INT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+   "isPublished" BOOLEAN NOT NULL);
