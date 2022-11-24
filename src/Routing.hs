@@ -1,31 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Routing where
 
-import Config (App, Environment (..))
-import Control.Monad.Reader (ask, liftIO)
-import Data.Aeson.Encode.Pretty (encodePretty)
+import Config (App)
+import Control.Monad.Reader (liftIO)
 import qualified Data.ByteString.Char8 as BS
-import Data.Maybe (fromMaybe)
-import qualified DbQuery.Category as DBC
-import qualified DbQuery.Image as DBI
-import qualified DbQuery.Post as DBP
-import qualified DbQuery.User as DBU
 import Endpoints
   ( createCategory,
     createPost,
     createUser,
     editCategory,
     editPost,
+    getCategories,
     getImageById,
+    getPosts,
+    getUsers,
   )
 import Helpers
-  ( getQueryFilters,
-    lookup',
+  ( lookup',
     responseBadRequest,
     responseNotFound,
-    responseOk,
     withAuthorization,
     withParsedRequest,
   )
@@ -45,9 +39,6 @@ import Network.Wai
     requestMethod,
   )
 import Text.Read (readMaybe)
-import qualified Types.API.PostWithImages as API
-import qualified Types.Entities.GetPosts as GP
-import qualified Types.Entities.Image as Image
 
 application :: Request -> (Response -> IO ResponseReceived) -> App ResponseReceived
 application req respond
@@ -78,7 +69,6 @@ application req respond
         response <- responseNotFound ""
         liftIO $ respond response
   | requestMethod req == methodGet = do
-    Environment {..} <- ask
     case path of
       "getImageById" -> case lookup' "id" queryItems of
         Nothing -> do
@@ -92,69 +82,13 @@ application req respond
             response <- getImageById imageId'
             liftIO $ respond response
       "categories" -> do
-        let (mbLimit, mbOffset) =
-              ( (readMaybe . BS.unpack)
-                  =<< lookup' "limit" queryItems ::
-                  Maybe Int,
-                (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int
-              )
-        let cfgLimit = limit
-        let limit' =
-              if cfgLimit < fromMaybe cfgLimit mbLimit
-                then cfgLimit
-                else fromMaybe cfgLimit mbLimit
-        let offset' = fromMaybe offset mbOffset
-        categories <- liftIO $ DBC.showCategories conn limit' offset'
-        response <- responseOk $ encodePretty categories
+        response <- getCategories queryItems
         liftIO $ respond response
       "users" -> do
-        let (mbLimit, mbOffset) =
-              ( (readMaybe . BS.unpack)
-                  =<< lookup' "limit" queryItems ::
-                  Maybe Int,
-                (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int
-              )
-        let cfgLimit = limit
-        let limit' =
-              if cfgLimit < fromMaybe cfgLimit mbLimit
-                then cfgLimit
-                else fromMaybe cfgLimit mbLimit
-        let offset' = fromMaybe offset mbOffset
-        users <- liftIO $ DBU.showUsers conn limit' offset'
-        response <- responseOk $ encodePretty users
+        response <- getUsers queryItems
         liftIO $ respond response
       "posts" -> do
-        let queryFilters = getQueryFilters queryItems
-        let mbQuerySortBy = lookup' "sortBy" queryItems
-        let mbSearch = lookup' "search" queryItems
-        let (mbLimit, mbOffset) =
-              ( (readMaybe . BS.unpack)
-                  =<< lookup' "limit" queryItems ::
-                  Maybe Int,
-                (readMaybe . BS.unpack) =<< lookup' "offset" queryItems :: Maybe Int
-              )
-        let cfgLimit = limit
-        let limit' =
-              if cfgLimit < fromMaybe cfgLimit mbLimit
-                then cfgLimit
-                else fromMaybe cfgLimit mbLimit
-        let offset' = fromMaybe offset mbOffset
-        posts <-
-          liftIO $
-            DBP.showPosts
-              conn
-              limit'
-              offset'
-              queryFilters
-              mbQuerySortBy
-              mbSearch
-        images <-
-          liftIO $
-            DBI.getImagesByPostIds
-              conn
-              (map GP.postId posts)
-        let postsWithImages = mkPostsWithImages posts images
-        response <- responseOk $ encodePretty postsWithImages
+        response <- getPosts queryItems
         liftIO $ respond response
       _ -> do
         response <- responseNotFound ""
@@ -176,21 +110,3 @@ application req respond
         if headerName == "Authorization"
           then Just bStr
           else getBase64LoginAndPassword xs
-
-    mkPostsWithImages :: [GP.GetPosts] -> [Image.Image] -> [API.PostWithImages]
-    mkPostsWithImages [] _ = []
-    mkPostsWithImages (post : posts) images =
-      API.PostWithImages
-        (GP.postId post)
-        (GP.title post)
-        (GP.text post)
-        (GP.categoryId post)
-        (GP.createdAt post)
-        (GP.authorId post)
-        (GP.isPublished post)
-        (GP.authorName post)
-        (GP.categoryName post)
-        ( map (("http://localhost:4000/getImageById?id=" <>) . show . Image.imageId) $
-            filter (\image -> Image.postId image == GP.postId post) images
-        ) :
-      mkPostsWithImages posts images

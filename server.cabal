@@ -32,6 +32,7 @@ library
       DbQuery.Test
       DbQuery.User
       Endpoints
+      Endpoints.Categories
       Endpoints.CreateCategory
       Endpoints.CreatePost
       Endpoints.CreateUser
@@ -44,6 +45,8 @@ library
       Endpoints.Handlers.EditCategory
       Endpoints.Handlers.EditPost
       Endpoints.Handlers.GetImageById
+      Endpoints.Posts
+      Endpoints.Users
       Hash
       Helpers
       Logging
