@@ -31,6 +31,9 @@ createPost author req = do
     NotAuthor ->
       responseBadRequest
         "You can not post news because you are not an author"
+    WrongContentType ->
+      responseBadRequest
+        "Image format should be jpg, jpeg or png"
   where
     handle conn =
       Handle
