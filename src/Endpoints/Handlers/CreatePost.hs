@@ -19,7 +19,7 @@ data Handle m = Handle
       m ()
   }
 
-data CreatePostResult = Success | CategoryNotExist | NotAuthor
+data CreatePostResult = Success | CategoryNotExist | NotAuthor | WrongContentType
   deriving (Eq, Show)
 
 createPostHandler ::
@@ -28,20 +28,22 @@ createPostHandler ::
   U.User ->
   CreatePostRequest ->
   m CreatePostResult
-createPostHandler Handle {..} author CreatePostRequest {..} =
-  if U.isAuthor author
-    then do
-      category <- getCategoryById categoryId
-      case category of
-        [] -> pure CategoryNotExist
-        _ -> do
-          insertNewPost
-            title
-            text
-            categoryId
-            (U.userId author)
-            isPublished
-            base64Images
-            contentTypes
-          pure Success
-    else pure NotAuthor
+createPostHandler Handle {..} author CreatePostRequest {..}
+  | U.isAuthor author = do
+    category <- getCategoryById categoryId
+    case category of
+      [] -> pure CategoryNotExist
+      _ -> do
+        if all (`elem` ["png", "jpg", "jpeg"]) contentTypes
+          then do
+            insertNewPost
+              title
+              text
+              categoryId
+              (U.userId author)
+              isPublished
+              base64Images
+              contentTypes
+            pure Success
+          else pure WrongContentType
+  | otherwise = pure NotAuthor

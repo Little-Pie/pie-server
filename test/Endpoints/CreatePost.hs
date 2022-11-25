@@ -39,7 +39,7 @@ createPostRequest =
     1
     False
     ["imageInBase64"]
-    ["imageContentType"]
+    ["png"]
 
 createPostTest :: SpecWith ()
 createPostTest =
@@ -64,4 +64,11 @@ createPostTest =
               handle
               userAdminNotAuthor {Types.Entities.User.isAuthor = False}
               createPostRequest
+      res `shouldBe` pure NotAuthor
+    it "Should return bad request in case image format is not supported" $ do
+      let res =
+            createPostHandler
+              handle
+              userAdminNotAuthor
+              createPostRequest {contentTypes = [""]}
       res `shouldBe` pure NotAuthor
