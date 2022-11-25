@@ -3,20 +3,13 @@
 module Endpoints.Handlers.CreatePost where
 
 import Types.API.CreatePost (CreatePostRequest (..))
+import Types.Db (InsertNewPost (..))
 import qualified Types.Entities.Category as C
 import qualified Types.Entities.User as U
 
 data Handle m = Handle
   { getCategoryById :: Int -> m [C.Category],
-    insertNewPost ::
-      String ->
-      String ->
-      Int ->
-      Int ->
-      Bool ->
-      [String] ->
-      [String] ->
-      m ()
+    insertNewPost :: InsertNewPost -> m ()
   }
 
 data CreatePostResult = Success | CategoryNotExist | NotAuthor | WrongContentType
@@ -37,13 +30,15 @@ createPostHandler Handle {..} author CreatePostRequest {..}
         if all (`elem` ["png", "jpg", "jpeg"]) contentTypes
           then do
             insertNewPost
-              title
-              text
-              categoryId
-              (U.userId author)
-              isPublished
-              base64Images
-              contentTypes
+              ( InsertNewPost
+                  title
+                  text
+                  categoryId
+                  (U.userId author)
+                  isPublished
+                  base64Images
+                  contentTypes
+              )
             pure Success
           else pure WrongContentType
   | otherwise = pure NotAuthor

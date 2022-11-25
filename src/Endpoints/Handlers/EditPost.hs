@@ -4,20 +4,13 @@ module Endpoints.Handlers.EditPost where
 
 import Data.Maybe (fromMaybe)
 import Types.API.EditPost as API (EditPostRequest (..))
+import Types.Db (EditPost (..))
 import qualified Types.Entities.Category as C
 import qualified Types.Entities.Post as P
 import qualified Types.Entities.User as U
 
 data Handle m = Handle
-  { editPost ::
-      String ->
-      String ->
-      Int ->
-      Int ->
-      Bool ->
-      [String] ->
-      [String] ->
-      m (),
+  { editPost :: EditPost -> m (),
     getCategoryById :: Int -> m [C.Category],
     getPostById :: Int -> m [P.Post]
   }
@@ -68,12 +61,14 @@ editPostHandler Handle {..} user EditPostRequest {..} = do
           let base64Images' = fromMaybe [] base64Images
           let contentTypes' = fromMaybe [] contentTypes
           editPost
-            (P.title newPost)
-            (P.text newPost)
-            (P.categoryId newPost)
-            postId
-            (P.isPublished newPost)
-            base64Images'
-            contentTypes'
+            ( EditPost
+                (P.title newPost)
+                (P.text newPost)
+                (P.categoryId newPost)
+                postId
+                (P.isPublished newPost)
+                base64Images'
+                contentTypes'
+            )
           pure Success
         else pure NotAuthor

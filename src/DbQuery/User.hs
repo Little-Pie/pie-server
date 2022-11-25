@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module DbQuery.User where
 
@@ -10,6 +11,7 @@ import Database.PostgreSQL.Simple
     query,
     query_,
   )
+import Types.Db (InsertNewUser (..))
 import Types.Entities.User (User)
 
 getUsers :: Connection -> IO [User]
@@ -25,8 +27,8 @@ getUserByLogin conn login =
     "SELECT * FROM users WHERE login=(?)"
     (Only login)
 
-insertNewUser :: Connection -> String -> String -> String -> Bool -> Bool -> IO ()
-insertNewUser conn name login password isAdmin isAuthor = do
+insertNewUser :: Connection -> InsertNewUser -> IO ()
+insertNewUser conn InsertNewUser {..} = do
   void $
     execute
       conn

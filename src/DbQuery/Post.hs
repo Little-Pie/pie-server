@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
 module DbQuery.Post where
@@ -15,20 +16,12 @@ import Database.PostgreSQL.Simple
     returning,
   )
 import Database.PostgreSQL.Simple.Types (Query (..))
+import Types.Db (EditPost (..), InsertNewPost (..))
 import Types.Entities.GetPosts (GetPosts)
 import Types.Entities.Post (Post)
 
-insertNewPost ::
-  Connection ->
-  String ->
-  String ->
-  Int ->
-  Int ->
-  Bool ->
-  [String] ->
-  [String] ->
-  IO ()
-insertNewPost conn title text categoryId userId isPublished base64Images contentTypes = do
+insertNewPost :: Connection -> InsertNewPost -> IO ()
+insertNewPost conn InsertNewPost {..} = do
   postId' <-
     mapM (pure . fromOnly)
       =<< returning
@@ -47,8 +40,8 @@ insertNewPost conn title text categoryId userId isPublished base64Images content
           "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)"
           imageRows
 
-editPost :: Connection -> String -> String -> Int -> Int -> Bool -> [String] -> [String] -> IO ()
-editPost conn title text categoryId postId isPublished base64Images contentTypes = do
+editPost :: Connection -> EditPost -> IO ()
+editPost conn EditPost {..} = do
   void $
     execute
       conn
