@@ -7,6 +7,7 @@ import Config (Config (..), Environment (..), getConfig)
 import Control.Exception (SomeException)
 import Control.Monad (void)
 import Control.Monad.Reader (runReaderT)
+import Data.List (isInfixOf)
 import Database.PostgreSQL.Simple (Connection, close, connect)
 import Database.PostgreSQL.Simple.Migration
   ( MigrationCommand (..),
@@ -56,7 +57,9 @@ exceptionSettings :: Environment -> Maybe Request -> SomeException -> IO ()
 exceptionSettings env _ exception = runReaderT (printLog Error $ show exception) env
 
 exceptionResponseSettings :: SomeException -> Response
-exceptionResponseSettings _ = responsePlainText status500 "Something went wrong"
+exceptionResponseSettings exception
+  | "libpq" `isInfixOf` show exception = responsePlainText status500 "No connection to database"
+  | otherwise = responsePlainText status500 "Something went wrong"
 
 execMigrations :: Connection -> IO ()
 execMigrations conn = do
