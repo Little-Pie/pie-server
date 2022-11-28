@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.EditCategory where
 
-import Config (App, Environment (..))
-import Control.Monad.Reader (ask, lift)
+import Config (App)
 import qualified DbQuery.Category as DB
 import Endpoints.Handlers.EditCategory
   ( EditCategoryResult (..),
@@ -18,8 +16,7 @@ import Types.Entities.User (User)
 
 editCategory :: User -> EditCategoryRequest -> App Response
 editCategory user req = do
-  Environment {..} <- ask
-  res <- lift $ editCategoryHandler (handle conn) user req
+  res <- editCategoryHandler handle user req
   case res of
     Success ->
       responseOk
@@ -40,11 +37,11 @@ editCategory user req = do
       responseNotFound
         ""
   where
-    handle conn =
+    handle =
       Handle
-        { getGeneralCategoryByName = DB.getGeneralCategoryByName conn,
-          getCategoryByNameAndParent = DB.getCategoryByNameAndParent conn,
-          Endpoints.Handlers.EditCategory.editCategory = DB.editCategory conn,
-          getCategoryById = DB.getCategoryById conn,
-          getCategoryByParentId = DB.getCategoryByParentId conn
+        { getGeneralCategoryByName = DB.getGeneralCategoryByName,
+          getCategoryByNameAndParent = DB.getCategoryByNameAndParent,
+          Endpoints.Handlers.EditCategory.editCategory = DB.editCategory,
+          getCategoryById = DB.getCategoryById,
+          getCategoryByParentId = DB.getCategoryByParentId
         }

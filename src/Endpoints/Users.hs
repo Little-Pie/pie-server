@@ -4,7 +4,7 @@
 module Endpoints.Users where
 
 import Config (App, Environment (..))
-import Control.Monad.Reader (ask, liftIO)
+import Control.Monad.Reader (ask)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Char8 as BS
 import Data.Maybe (fromMaybe)
@@ -26,5 +26,5 @@ getUsers queryItems = do
           then cfgLimit
           else fromMaybe cfgLimit mbLimit
   let offset' = fromMaybe offset mbOffset
-  users <- liftIO $ DBU.showUsers conn limit' offset'
+  users <- DBU.showUsers limit' offset'
   responseOk $ encodePretty users
