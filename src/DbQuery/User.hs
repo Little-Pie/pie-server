@@ -3,41 +3,49 @@
 
 module DbQuery.User where
 
+import Config (App)
 import Control.Monad (void)
 import Database.PostgreSQL.Simple
-  ( Connection,
-    Only (..),
+  ( Only (..),
     execute,
     query,
     query_,
   )
+import Helpers (withDbConnection)
 import Types.Db (InsertNewUser (..))
 import Types.Entities.User (User)
 
-getUsers :: Connection -> IO [User]
-getUsers conn =
-  query_
-    conn
-    "select * from users"
+getUsers :: App [User]
+getUsers =
+  withDbConnection (`query_` "select * from users")
 
-getUserByLogin :: Connection -> String -> IO [User]
-getUserByLogin conn login =
-  query
-    conn
-    "SELECT * FROM users WHERE login=(?)"
-    (Only login)
+getUserByLogin :: String -> App [User]
+getUserByLogin login =
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          "SELECT * FROM users WHERE login=(?)"
+          (Only login)
+    )
 
-insertNewUser :: Connection -> InsertNewUser -> IO ()
-insertNewUser conn InsertNewUser {..} = do
+insertNewUser :: InsertNewUser -> App ()
+insertNewUser InsertNewUser {..} = do
   void $
-    execute
-      conn
-      "INSERT INTO users (name,login,password,\"isAdmin\",\"isAuthor\") VALUES (?,?,?,?,?)"
-      (name, login, password, isAdmin, isAuthor)
+    withDbConnection
+      ( \conn ->
+          execute
+            conn
+            "INSERT INTO users (name,login,password,\"isAdmin\",\"isAuthor\") VALUES (?,?,?,?,?)"
+            (name, login, password, isAdmin, isAuthor)
+      )
 
-showUsers :: Connection -> Int -> Int -> IO [User]
-showUsers conn limit offset =
-  query
-    conn
-    "select * from users limit (?) offset (?)"
-    (limit, offset)
+showUsers :: Int -> Int -> App [User]
+showUsers limit offset =
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          "select * from users limit (?) offset (?)"
+          (limit, offset)
+    )

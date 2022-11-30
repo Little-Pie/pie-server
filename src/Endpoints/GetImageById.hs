@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.GetImageById where
 
-import Config (App, Environment (..))
-import Control.Monad.Reader (ask, lift)
+import Config (App)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified DbQuery.Image as DB
@@ -18,8 +16,7 @@ import Network.Wai (Response)
 
 getImageById :: Int -> App Response
 getImageById imageId = do
-  Environment {..} <- ask
-  res <- lift $ getImageByIdHandler (handle conn) imageId
+  res <- getImageByIdHandler handle imageId
   case res of
     Success decodedImage contentType' ->
       responseImage
@@ -32,7 +29,7 @@ getImageById imageId = do
       responseBadRequest
         "Couldn't decode from base64"
   where
-    handle conn =
+    handle =
       Handle
-        { Handle.getImageById = DB.getImageById conn
+        { Handle.getImageById = DB.getImageById
         }

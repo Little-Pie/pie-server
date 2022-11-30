@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.CreateCategory where
 
-import Config (App, Environment (..))
-import Control.Monad.Reader (ask, lift)
+import Config (App)
 import qualified DbQuery.Category as DB
 import Endpoints.Handlers.CreateCategory
   ( CreateCategoryResult (..),
@@ -18,8 +16,7 @@ import Types.Entities.User (User)
 
 createCategory :: User -> API.CreateCategoryRequest -> App Response
 createCategory user req = do
-  Environment {..} <- ask
-  res <- lift $ createCategoryHandler (handle conn) user req
+  res <- createCategoryHandler handle user req
   case res of
     Success ->
       responseOk
@@ -34,11 +31,11 @@ createCategory user req = do
       responseNotFound
         ""
   where
-    handle conn =
+    handle =
       Handle
-        { getGeneralCategoryByName = DB.getGeneralCategoryByName conn,
-          insertNewGeneralCategory = DB.insertNewGeneralCategory conn,
-          getCategoryByNameAndParent = DB.getCategoryByNameAndParent conn,
-          insertNewCategory = DB.insertNewCategory conn,
-          getCategoryById = DB.getCategoryById conn
+        { getGeneralCategoryByName = DB.getGeneralCategoryByName,
+          insertNewGeneralCategory = DB.insertNewGeneralCategory,
+          getCategoryByNameAndParent = DB.getCategoryByNameAndParent,
+          insertNewCategory = DB.insertNewCategory,
+          getCategoryById = DB.getCategoryById
         }

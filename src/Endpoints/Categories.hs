@@ -4,7 +4,7 @@
 module Endpoints.Categories where
 
 import Config (App, Environment (..))
-import Control.Monad.Reader (ask, liftIO)
+import Control.Monad.Reader (ask)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Char8 as BS
 import Data.Maybe (fromMaybe)
@@ -26,5 +26,5 @@ getCategories queryItems = do
           then cfgLimit
           else fromMaybe cfgLimit mbLimit
   let offset' = fromMaybe offset mbOffset
-  categories <- liftIO $ DBC.showCategories conn limit' offset'
+  categories <- DBC.showCategories limit' offset'
   responseOk $ encodePretty categories

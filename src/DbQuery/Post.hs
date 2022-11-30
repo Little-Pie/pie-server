@@ -5,69 +5,89 @@
 
 module DbQuery.Post where
 
+import Config (App)
 import Control.Monad (void)
+import Control.Monad.Reader (liftIO)
 import qualified Data.ByteString.Char8 as BS
 import Database.PostgreSQL.Simple
-  ( Connection,
-    Only (..),
+  ( Only (..),
     execute,
     executeMany,
     query,
     returning,
   )
 import Database.PostgreSQL.Simple.Types (Query (..))
+import Helpers (withDbConnection)
 import Types.Db (EditPost (..), InsertNewPost (..))
 import Types.Entities.GetPosts (GetPosts)
 import Types.Entities.Post (Post)
 
-insertNewPost :: Connection -> InsertNewPost -> IO ()
-insertNewPost conn InsertNewPost {..} = do
+insertNewPost :: InsertNewPost -> App ()
+insertNewPost InsertNewPost {..} = do
   postId' <-
     mapM (pure . fromOnly)
-      =<< returning
-        conn
-        "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") \
-        \VALUES (?,?,?,?,?) RETURNING id"
-        [(title, text, userId, isPublished, categoryId)] ::
-      IO [Int]
+      =<< withDbConnection
+        ( \conn ->
+            returning
+              conn
+              "INSERT INTO posts (title,text,\"authorId\",\"isPublished\",\"categoryId\") \
+              \VALUES (?,?,?,?,?) RETURNING id"
+              [(title, text, userId, isPublished, categoryId)]
+        ) ::
+      App [Int]
   case postId' of
-    [] -> putStrLn "Something went wrong: post wasn't created"
+    [] -> liftIO $ putStrLn "Something went wrong: post wasn't created"
     (postId : _) -> do
       let imageRows = zipWith (postId,,) base64Images contentTypes
       void $
-        executeMany
-          conn
-          "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)"
-          imageRows
+        withDbConnection
+          ( \conn ->
+              executeMany
+                conn
+                "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)"
+                imageRows
+          )
 
-editPost :: Connection -> EditPost -> IO ()
-editPost conn EditPost {..} = do
+editPost :: EditPost -> App ()
+editPost EditPost {..} = do
   void $
-    execute
-      conn
-      "UPDATE posts SET (title,text,\"isPublished\",\"categoryId\") = (?,?,?,?) WHERE id = (?)"
-      (title, text, isPublished, categoryId, postId)
+    withDbConnection
+      ( \conn ->
+          execute
+            conn
+            "UPDATE posts SET (title,text,\"isPublished\",\"categoryId\") = (?,?,?,?) WHERE id = (?)"
+            (title, text, isPublished, categoryId, postId)
+      )
   case base64Images of
     [] -> pure ()
     _ -> do
       let imageRows = zipWith (postId,,) base64Images contentTypes
       void $
-        execute
-          conn
-          "DELETE FROM images WHERE \"postId\" = (?)"
-          (Only postId)
+        withDbConnection
+          ( \conn ->
+              execute
+                conn
+                "DELETE FROM images WHERE \"postId\" = (?)"
+                (Only postId)
+          )
       void $
-        executeMany
-          conn
-          "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)"
-          imageRows
+        withDbConnection
+          ( \conn ->
+              executeMany
+                conn
+                "INSERT INTO images (\"postId\",\"base64Image\",\"contentType\") VALUES (?,?,?)"
+                imageRows
+          )
 
-getPostById :: Connection -> Int -> IO [Post]
-getPostById conn postId =
-  query
-    conn
-    "select * from posts where id=(?)"
-    (Only postId)
+getPostById :: Int -> App [Post]
+getPostById postId =
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          "select * from posts where id=(?)"
+          (Only postId)
+    )
 
 initQuery :: Query
 initQuery =
@@ -146,25 +166,21 @@ createFilterDBReq filt filterParam = case filt of
   _ -> ""
 
 showPosts ::
-  Connection ->
   Int ->
   Int ->
   [(BS.ByteString, BS.ByteString)] ->
   Maybe BS.ByteString ->
   Maybe BS.ByteString ->
-  IO [GetPosts]
-showPosts conn limit' offset' queryFilters mbQuerySortBy mbSearch = do
-  print
-    ( initQuery <> getFilterBy queryFilters
-        <> getSearch mbSearch
-        <> getSortBy mbQuerySortBy
-        <> " limit (?) offset (?)"
+  App [GetPosts]
+showPosts limit' offset' queryFilters mbQuerySortBy mbSearch = do
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          ( initQuery <> getFilterBy queryFilters
+              <> getSearch mbSearch
+              <> getSortBy mbQuerySortBy
+              <> " limit (?) offset (?)"
+          )
+          (limit', offset')
     )
-  query
-    conn
-    ( initQuery <> getFilterBy queryFilters
-        <> getSearch mbSearch
-        <> getSortBy mbQuerySortBy
-        <> " limit (?) offset (?)"
-    )
-    (limit', offset')

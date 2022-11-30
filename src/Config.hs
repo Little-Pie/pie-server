@@ -8,7 +8,7 @@ module Config where
 import Control.Monad.Reader (ReaderT)
 import Data.Aeson (FromJSON, decodeStrict)
 import qualified Data.ByteString.Char8 as BS
-import Database.PostgreSQL.Simple (Connection)
+import Database.PostgreSQL.Simple (ConnectInfo (..))
 import GHC.Generics (Generic)
 import Logging (LoggingLevel)
 import System.IO (Handle)
@@ -35,9 +35,9 @@ getConfig = do
 data Environment = Environment
   { limit :: Int,
     offset :: Int,
-    conn :: Connection,
     logHandle :: Handle,
-    loggingLevel :: LoggingLevel
+    loggingLevel :: LoggingLevel,
+    connectInfo :: ConnectInfo
   }
 
 type App = ReaderT Environment IO
