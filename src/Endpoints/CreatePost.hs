@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.CreatePost where
 
-import Config (App, Environment (..))
-import Control.Monad.Reader (ask, lift)
+import Config (App)
 import qualified DbQuery.Category as DBC
 import qualified DbQuery.Post as DBP
 import Endpoints.Handlers.CreatePost
@@ -19,8 +17,7 @@ import qualified Types.Entities.User as U
 
 createPost :: U.User -> API.CreatePostRequest -> App Response
 createPost author req = do
-  Environment {..} <- ask
-  res <- lift $ createPostHandler (handle conn) author req
+  res <- createPostHandler handle author req
   case res of
     Success ->
       responseOk
@@ -35,8 +32,8 @@ createPost author req = do
       responseBadRequest
         "Image format should be jpg, jpeg or png"
   where
-    handle conn =
+    handle =
       Handle
-        { getCategoryById = DBC.getCategoryById conn,
-          insertNewPost = DBP.insertNewPost conn
+        { getCategoryById = DBC.getCategoryById,
+          insertNewPost = DBP.insertNewPost
         }

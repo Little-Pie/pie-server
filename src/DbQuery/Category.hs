@@ -2,72 +2,101 @@
 
 module DbQuery.Category where
 
+import Config (App)
 import Control.Monad (void)
 import Database.PostgreSQL.Simple
-  ( Connection,
-    Only (..),
+  ( Only (..),
     Query,
     execute,
     query,
   )
+import Helpers (withDbConnection)
 import Types.Entities.Category (Category)
 
-getCategoryById :: Connection -> Int -> IO [Category]
-getCategoryById conn categoryId =
-  query
-    conn
-    "SELECT * FROM categories WHERE id=(?)"
-    (Only categoryId)
+getCategoryById :: Int -> App [Category]
+getCategoryById categoryId =
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          "SELECT * FROM categories WHERE id=(?)"
+          (Only categoryId)
+    )
 
-getGeneralCategoryByName :: Connection -> String -> IO [Category]
-getGeneralCategoryByName conn name =
-  query
-    conn
-    "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=null"
-    (Only name)
+getGeneralCategoryByName :: String -> App [Category]
+getGeneralCategoryByName name =
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=null"
+          (Only name)
+    )
 
-insertNewGeneralCategory :: Connection -> String -> IO ()
-insertNewGeneralCategory conn name =
+insertNewGeneralCategory :: String -> App ()
+insertNewGeneralCategory name =
   void $
-    execute
-      conn
-      "INSERT INTO categories (name) VALUES (?)"
-      (Only name)
+    withDbConnection
+      ( \conn ->
+          execute
+            conn
+            "INSERT INTO categories (name) VALUES (?)"
+            (Only name)
+      )
 
-getCategoryByNameAndParent :: Connection -> String -> Int -> IO [Category]
-getCategoryByNameAndParent conn name parentCategoryId =
-  query
-    conn
-    "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=(?)"
-    (name, parentCategoryId)
+getCategoryByNameAndParent :: String -> Int -> App [Category]
+getCategoryByNameAndParent name parentCategoryId =
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=(?)"
+          (name, parentCategoryId)
+    )
 
-insertNewCategory :: Connection -> String -> Int -> IO ()
-insertNewCategory conn name parentCategoryId =
+insertNewCategory :: String -> Int -> App ()
+insertNewCategory name parentCategoryId =
   void $
-    execute
-      conn
-      "INSERT INTO categories (name,\"parentId\") VALUES (?,?)"
-      (name, parentCategoryId)
+    withDbConnection
+      ( \conn ->
+          execute
+            conn
+            "INSERT INTO categories (name,\"parentId\") VALUES (?,?)"
+            (name, parentCategoryId)
+      )
 
-showCategories :: Connection -> Int -> Int -> IO [Category]
-showCategories conn limit offset =
-  query
-    conn
-    "select * from categories limit (?) offset (?)"
-    (limit, offset)
+showCategories :: Int -> Int -> App [Category]
+showCategories limit offset =
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          "select * from categories limit (?) offset (?)"
+          (limit, offset)
+    )
 
-editCategory :: Connection -> String -> Maybe Int -> Int -> IO ()
-editCategory conn name parentCategoryId categoryId =
+editCategory :: String -> Maybe Int -> Int -> App ()
+editCategory name parentCategoryId categoryId =
   void $
-    execute
-      conn
-      "UPDATE categories SET (name,\"parentId\") = (?,?) WHERE id = (?)"
-      (name, parentCategoryId, categoryId)
+    withDbConnection
+      ( \conn ->
+          execute
+            conn
+            "UPDATE categories SET (name,\"parentId\") = (?,?) WHERE id = (?)"
+            (name, parentCategoryId, categoryId)
+      )
 
-getCategoryByParentId :: Connection -> [Int] -> IO [Category]
-getCategoryByParentId conn ids = case mkQuery ids of
+getCategoryByParentId :: [Int] -> App [Category]
+getCategoryByParentId ids = case mkQuery ids of
   "" -> pure []
-  someQuery -> query conn ("SELECT * FROM categories WHERE " <> someQuery) ids
+  someQuery ->
+    withDbConnection
+      ( \conn ->
+          query
+            conn
+            ("SELECT * FROM categories WHERE " <> someQuery)
+            ids
+      )
   where
     mkQuery :: [Int] -> Query
     mkQuery [] = ""

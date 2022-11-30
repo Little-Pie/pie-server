@@ -2,22 +2,34 @@
 
 module DbQuery.Image where
 
-import Database.PostgreSQL.Simple (Connection, Only (..), query)
+import Config (App)
+import Database.PostgreSQL.Simple (Only (..), query)
 import Database.PostgreSQL.Simple.Types (Query)
+import Helpers (withDbConnection)
 import Types.Entities.Image (Image)
 
-getImageById :: Connection -> Int -> IO [Image]
-getImageById conn imageId =
-  query
-    conn
-    "SELECT * FROM images WHERE id=(?)"
-    (Only imageId)
+getImageById :: Int -> App [Image]
+getImageById imageId =
+  withDbConnection
+    ( \conn ->
+        query
+          conn
+          "SELECT * FROM images WHERE id=(?)"
+          (Only imageId)
+    )
 
-getImagesByPostIds :: Connection -> [Int] -> IO [Image]
-getImagesByPostIds conn postIds =
+getImagesByPostIds :: [Int] -> App [Image]
+getImagesByPostIds postIds =
   case addPostFilters initQuery postIds of
     Nothing -> pure []
-    Just imagesQuery -> query conn imagesQuery postIds
+    Just imagesQuery ->
+      withDbConnection
+        ( \conn ->
+            query
+              conn
+              imagesQuery
+              postIds
+        )
 
 initQuery :: Query
 initQuery = "SELECT * FROM images"

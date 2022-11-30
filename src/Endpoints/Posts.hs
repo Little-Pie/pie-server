@@ -4,7 +4,7 @@
 module Endpoints.Posts where
 
 import Config (App, Environment (..))
-import Control.Monad.Reader (ask, liftIO)
+import Control.Monad.Reader (ask)
 import Data.Aeson.Encode.Pretty (encodePretty)
 import qualified Data.ByteString.Char8 as BS
 import Data.Maybe (fromMaybe)
@@ -34,19 +34,15 @@ getPosts queryItems = do
           else fromMaybe cfgLimit mbLimit
   let offset' = fromMaybe offset mbOffset
   posts <-
-    liftIO $
-      DBP.showPosts
-        conn
-        limit'
-        offset'
-        queryFilters
-        mbQuerySortBy
-        mbSearch
+    DBP.showPosts
+      limit'
+      offset'
+      queryFilters
+      mbQuerySortBy
+      mbSearch
   images <-
-    liftIO $
-      DBI.getImagesByPostIds
-        conn
-        (map GP.postId posts)
+    DBI.getImagesByPostIds
+      (map GP.postId posts)
   let postsWithImages = mkPostsWithImages posts images
   responseOk $ encodePretty postsWithImages
 

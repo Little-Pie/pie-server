@@ -6,17 +6,15 @@ module Helpers where
 import Config (App, Config (..), Environment (..))
 import Control.Monad.Reader (ask, liftIO, runReaderT)
 import Data.Aeson (FromJSON, decode)
-import qualified Data.ByteString.Base64 as BASE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
-import qualified Data.ByteString.Lazy.Char8 as LBSC
 import Database.PostgreSQL.Simple as PSQL
   ( ConnectInfo (..),
     Connection,
+    close,
+    connect,
     defaultConnectInfo,
   )
-import DbQuery.User (getUserByLogin)
-import Hash (makeStringHash)
 import Logging (LoggingLevel (..))
 import Network.HTTP.Types
   ( Status,
@@ -38,7 +36,6 @@ import Network.Wai
     responseStatus,
   )
 import System.IO (hFlush, hPutStrLn)
-import Types.Entities.User (User (..))
 
 printLog :: LoggingLevel -> String -> App ()
 printLog = printLogHelper
@@ -60,24 +57,6 @@ localPG Config {..} =
       PSQL.connectUser = connectUser,
       PSQL.connectPassword = connectPassword
     }
-
-authorize :: Connection -> Maybe BS.ByteString -> IO (LBS.ByteString, Maybe User)
-authorize conn mbBase64LoginAndPassword = case mbBase64LoginAndPassword of
-  Nothing -> pure ("Found no header for Authorization", Nothing)
-  Just base64LoginAndPassword -> case BASE.decode base64LoginAndPassword of
-    Left err -> pure (LBSC.pack err, Nothing)
-    Right loginPassword -> do
-      let login' = BS.takeWhile (/= ':') loginPassword
-      let password' = BS.drop 1 $ BS.dropWhile (/= ':') loginPassword
-      users <- getUserByLogin conn (BS.unpack login')
-      case users of
-        [] -> pure ("Wrong login", Nothing)
-        [user] -> do
-          let loginPassword' = BS.pack $ login user ++ ":" ++ password user
-          if login' <> ":" <> BS.pack (makeStringHash $ BS.unpack password') == loginPassword'
-            then pure ("User is authorized", Just user)
-            else pure ("Wrong password", Nothing)
-        _ -> pure ("Something went wrong", Nothing)
 
 getQueryFilters :: [(BS.ByteString, Maybe BS.ByteString)] -> [(BS.ByteString, BS.ByteString)]
 getQueryFilters queryItems =
@@ -165,10 +144,10 @@ withParsedRequest reqBody f =
     Nothing -> responseBadRequest "Couldn't parse body"
     Just parsedReq -> f parsedReq
 
-withAuthorization :: Maybe BS.ByteString -> (User -> App Response) -> App Response
-withAuthorization mbBase64LoginAndPassword f = do
+withDbConnection :: (Connection -> IO a) -> App a
+withDbConnection f = do
   Environment {..} <- ask
-  (str, mbUser) <- liftIO $ authorize conn mbBase64LoginAndPassword
-  case mbUser of
-    Nothing -> responseUnauthorized str
-    Just authorizedUser -> f authorizedUser
+  conn <- liftIO $ connect connectInfo
+  res <- liftIO $ f conn
+  liftIO $ close conn
+  pure res

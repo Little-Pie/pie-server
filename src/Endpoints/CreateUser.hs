@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.CreateUser where
 
-import Config (App, Environment (..))
-import Control.Monad.Reader (ask, lift)
+import Config (App)
 import qualified DbQuery.User as DB
 import Endpoints.Handlers.CreateUser
   ( CreateUserResult (..),
@@ -18,8 +16,7 @@ import Types.Entities.User (User)
 
 createUser :: User -> API.CreateUserRequest -> App Response
 createUser user req = do
-  Environment {..} <- ask
-  res <- lift $ createUserHandler (handle conn) user req
+  res <- createUserHandler handle user req
   case res of
     Success ->
       responseOk
@@ -31,8 +28,8 @@ createUser user req = do
       responseNotFound
         ""
   where
-    handle conn =
+    handle =
       Handle
-        { insertNewUser = DB.insertNewUser conn,
-          getUserByLogin = DB.getUserByLogin conn
+        { insertNewUser = DB.insertNewUser,
+          getUserByLogin = DB.getUserByLogin
         }

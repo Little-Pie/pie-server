@@ -2,6 +2,7 @@
 
 module Routing where
 
+import Authorization (withAuthorization)
 import Config (App)
 import Control.Monad.Reader (liftIO)
 import qualified Data.ByteString.Char8 as BS
@@ -20,7 +21,6 @@ import Helpers
   ( lookup',
     responseBadRequest,
     responseNotFound,
-    withAuthorization,
     withParsedRequest,
   )
 import Network.HTTP.Types

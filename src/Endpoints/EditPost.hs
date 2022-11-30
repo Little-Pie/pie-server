@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Endpoints.EditPost where
 
-import Config (App, Environment (..))
-import Control.Monad.Reader (ask, lift)
+import Config (App)
 import qualified DbQuery.Category as DBC
 import qualified DbQuery.Post as DBP
 import Endpoints.Handlers.EditPost
@@ -19,8 +17,7 @@ import Types.Entities.User (User)
 
 editPost :: User -> EditPostRequest -> App Response
 editPost user req = do
-  Environment {..} <- ask
-  res <- lift $ editPostHandler (handle conn) user req
+  res <- editPostHandler handle user req
   case res of
     Success ->
       responseOk
@@ -32,9 +29,9 @@ editPost user req = do
       responseNotFound
         ""
   where
-    handle conn =
+    handle =
       Handle
-        { Endpoints.Handlers.EditPost.editPost = DBP.editPost conn,
-          getCategoryById = DBC.getCategoryById conn,
-          getPostById = DBP.getPostById conn
+        { Endpoints.Handlers.EditPost.editPost = DBP.editPost,
+          getCategoryById = DBC.getCategoryById,
+          getPostById = DBP.getPostById
         }
