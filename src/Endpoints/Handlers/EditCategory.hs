@@ -5,13 +5,14 @@ module Endpoints.Handlers.EditCategory where
 import Control.Applicative ((<|>))
 import Data.Maybe (fromMaybe)
 import Types.API.EditCategory (EditCategoryRequest (..))
+import Types.Db (EditCategory (..))
 import qualified Types.Entities.Category as C
 import qualified Types.Entities.User as U
 
 data Handle m = Handle
   { getGeneralCategoryByName :: String -> m [C.Category],
     getCategoryByNameAndParent :: String -> Int -> m [C.Category],
-    editCategory :: String -> Maybe Int -> Int -> m (),
+    editCategory :: EditCategory -> m (),
     getCategoryById :: Int -> m [C.Category],
     getCategoryByParentId :: [Int] -> m [C.Category]
   }
@@ -48,9 +49,11 @@ editCategoryHandler Handle {..} user EditCategoryRequest {..} = do
             case checkParentCategories of
               [] -> do
                 editCategory
-                  (C.name newCategory)
-                  (C.parentCategoryId category)
-                  categoryId
+                  ( EditCategory
+                      (C.name newCategory)
+                      (C.parentCategoryId category)
+                      categoryId
+                  )
                 pure Success
               _ -> pure NameIsTaken
           Just parentCategoryId' ->
@@ -72,9 +75,11 @@ editCategoryHandler Handle {..} user EditCategoryRequest {..} = do
                         case checkCategories of
                           [] -> do
                             editCategory
-                              (C.name newCategory)
-                              (C.parentCategoryId newCategory)
-                              categoryId
+                              ( EditCategory
+                                  (C.name newCategory)
+                                  (C.parentCategoryId newCategory)
+                                  categoryId
+                              )
                             pure Success
                           _ -> pure NameIsTaken
         else pure NotFound

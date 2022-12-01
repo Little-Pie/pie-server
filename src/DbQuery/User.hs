@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module DbQuery.User where
 
@@ -12,7 +11,7 @@ import Database.PostgreSQL.Simple
     query_,
   )
 import Helpers (withDbConnection)
-import Types.Db (InsertNewUser (..))
+import Types.API.CreateUser (CreateUserRequest)
 import Types.Entities.User (User)
 
 getUsers :: App [User]
@@ -29,15 +28,15 @@ getUserByLogin login =
           (Only login)
     )
 
-insertNewUser :: InsertNewUser -> App ()
-insertNewUser InsertNewUser {..} = do
+insertNewUser :: CreateUserRequest -> App ()
+insertNewUser req = do
   void $
     withDbConnection
       ( \conn ->
           execute
             conn
             "INSERT INTO users (name,login,password,\"isAdmin\",\"isAuthor\") VALUES (?,?,?,?,?)"
-            (name, login, password, isAdmin, isAuthor)
+            req
       )
 
 showUsers :: Int -> Int -> App [User]

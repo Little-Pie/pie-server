@@ -11,6 +11,8 @@ import Database.PostgreSQL.Simple
     query,
   )
 import Helpers (withDbConnection)
+import Types.API.CreateCategory (CreateCategoryRequest)
+import Types.Db (EditCategory)
 import Types.Entities.Category (Category)
 
 getCategoryById :: Int -> App [Category]
@@ -33,17 +35,6 @@ getGeneralCategoryByName name =
           (Only name)
     )
 
-insertNewGeneralCategory :: String -> App ()
-insertNewGeneralCategory name =
-  void $
-    withDbConnection
-      ( \conn ->
-          execute
-            conn
-            "INSERT INTO categories (name) VALUES (?)"
-            (Only name)
-      )
-
 getCategoryByNameAndParent :: String -> Int -> App [Category]
 getCategoryByNameAndParent name parentCategoryId =
   withDbConnection
@@ -54,15 +45,15 @@ getCategoryByNameAndParent name parentCategoryId =
           (name, parentCategoryId)
     )
 
-insertNewCategory :: String -> Int -> App ()
-insertNewCategory name parentCategoryId =
+insertNewCategory :: CreateCategoryRequest -> App ()
+insertNewCategory req =
   void $
     withDbConnection
       ( \conn ->
           execute
             conn
             "INSERT INTO categories (name,\"parentId\") VALUES (?,?)"
-            (name, parentCategoryId)
+            req
       )
 
 showCategories :: Int -> Int -> App [Category]
@@ -75,15 +66,15 @@ showCategories limit offset =
           (limit, offset)
     )
 
-editCategory :: String -> Maybe Int -> Int -> App ()
-editCategory name parentCategoryId categoryId =
+editCategory :: EditCategory -> App ()
+editCategory req =
   void $
     withDbConnection
       ( \conn ->
           execute
             conn
             "UPDATE categories SET (name,\"parentId\") = (?,?) WHERE id = (?)"
-            (name, parentCategoryId, categoryId)
+            req
       )
 
 getCategoryByParentId :: [Int] -> App [Category]

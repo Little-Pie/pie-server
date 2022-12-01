@@ -4,6 +4,7 @@
 module Types.API.CreateUser where
 
 import Data.Aeson (FromJSON)
+import Database.PostgreSQL.Simple (ToRow)
 import GHC.Generics (Generic)
 
 data CreateUserRequest = CreateUserRequest
@@ -13,4 +14,4 @@ data CreateUserRequest = CreateUserRequest
     isAdmin :: Bool,
     isAuthor :: Bool
   }
-  deriving (Generic, FromJSON)
+  deriving (Generic, FromJSON, ToRow)

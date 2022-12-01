@@ -1,24 +1,11 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
 module Types.Db where
 
-data InsertNewUser = InsertNewUser
-  { name :: String,
-    login :: String,
-    password :: String,
-    isAdmin :: Bool,
-    isAuthor :: Bool
-  }
-
-data InsertNewPost = InsertNewPost
-  { title :: String,
-    text :: String,
-    categoryId :: Int,
-    userId :: Int,
-    isPublished :: Bool,
-    base64Images :: [String],
-    contentTypes :: [String]
-  }
+import Database.PostgreSQL.Simple (ToRow)
+import GHC.Generics (Generic)
 
 data EditPost = EditPost
   { title :: String,
@@ -29,3 +16,10 @@ data EditPost = EditPost
     base64Images :: [String],
     contentTypes :: [String]
   }
+
+data EditCategory = EditCategory
+  { name :: String,
+    parentCategoryId :: Maybe Int,
+    categoryId :: Int
+  }
+  deriving (Generic, ToRow)

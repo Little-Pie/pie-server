@@ -18,12 +18,13 @@ import Database.PostgreSQL.Simple
   )
 import Database.PostgreSQL.Simple.Types (Query (..))
 import Helpers (withDbConnection)
-import Types.Db (EditPost (..), InsertNewPost (..))
+import Types.API.CreatePost (CreatePostRequest (..))
+import Types.Db (EditPost (..))
 import Types.Entities.GetPosts (GetPosts)
 import Types.Entities.Post (Post)
 
-insertNewPost :: InsertNewPost -> App ()
-insertNewPost InsertNewPost {..} = do
+insertNewPost :: CreatePostRequest -> Int -> App ()
+insertNewPost CreatePostRequest {..} userId = do
   postId' <-
     mapM (pure . fromOnly)
       =<< withDbConnection

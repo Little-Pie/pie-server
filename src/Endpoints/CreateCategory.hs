@@ -34,7 +34,6 @@ createCategory user req = do
     handle =
       Handle
         { getGeneralCategoryByName = DB.getGeneralCategoryByName,
-          insertNewGeneralCategory = DB.insertNewGeneralCategory,
           getCategoryByNameAndParent = DB.getCategoryByNameAndParent,
           insertNewCategory = DB.insertNewCategory,
           getCategoryById = DB.getCategoryById
