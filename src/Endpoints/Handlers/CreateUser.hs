@@ -7,7 +7,7 @@ import Types.API.CreateUser (CreateUserRequest (..))
 import qualified Types.Entities.User as U
 
 data Handle m = Handle
-  { insertNewUser :: String -> String -> String -> Bool -> Bool -> m (),
+  { insertNewUser :: CreateUserRequest -> m (),
     getUserByLogin :: String -> m [U.User]
   }
 
@@ -20,18 +20,13 @@ createUserHandler ::
   U.User ->
   CreateUserRequest ->
   m CreateUserResult
-createUserHandler Handle {..} user CreateUserRequest {..} =
+createUserHandler Handle {..} user req@CreateUserRequest {..} =
   if U.isAdmin user
     then do
       mbUser <- getUserByLogin login
       case mbUser of
         [] -> do
-          insertNewUser
-            name
-            login
-            (makeStringHash password)
-            isAdmin
-            isAuthor
+          insertNewUser req {password = makeStringHash password}
           pure Success
         _ -> pure LoginIsTaken
     else pure NotFound

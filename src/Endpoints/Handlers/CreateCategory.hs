@@ -8,9 +8,8 @@ import qualified Types.Entities.User as U
 
 data Handle m = Handle
   { getGeneralCategoryByName :: String -> m [C.Category],
-    insertNewGeneralCategory :: String -> m (),
     getCategoryByNameAndParent :: String -> Int -> m [C.Category],
-    insertNewCategory :: String -> Int -> m (),
+    insertNewCategory :: CreateCategoryRequest -> m (),
     getCategoryById :: Int -> m [C.Category]
   }
 
@@ -27,14 +26,14 @@ createCategoryHandler ::
   U.User ->
   CreateCategoryRequest ->
   m CreateCategoryResult
-createCategoryHandler Handle {..} user CreateCategoryRequest {..} =
+createCategoryHandler Handle {..} user req@CreateCategoryRequest {..} =
   if U.isAdmin user
     then case parentCategoryId of
       Nothing -> do
         categories <- getGeneralCategoryByName name
         case categories of
           [] -> do
-            insertNewGeneralCategory name
+            insertNewCategory req
             pure Success
           _ -> pure NameIsTaken
       Just parentCategoryId' -> do
@@ -45,7 +44,7 @@ createCategoryHandler Handle {..} user CreateCategoryRequest {..} =
             categories <- getCategoryByNameAndParent name parentCategoryId'
             case categories of
               [] -> do
-                insertNewCategory name parentCategoryId'
+                insertNewCategory req
                 pure Success
               _ -> pure NameIsTaken
     else pure NotFound

@@ -8,15 +8,7 @@ import qualified Types.Entities.User as U
 
 data Handle m = Handle
   { getCategoryById :: Int -> m [C.Category],
-    insertNewPost ::
-      String ->
-      String ->
-      Int ->
-      Int ->
-      Bool ->
-      [String] ->
-      [String] ->
-      m ()
+    insertNewPost :: CreatePostRequest -> Int -> m ()
   }
 
 data CreatePostResult = Success | CategoryNotExist | NotAuthor | WrongContentType
@@ -28,7 +20,7 @@ createPostHandler ::
   U.User ->
   CreatePostRequest ->
   m CreatePostResult
-createPostHandler Handle {..} author CreatePostRequest {..}
+createPostHandler Handle {..} author req@CreatePostRequest {..}
   | U.isAuthor author = do
     category <- getCategoryById categoryId
     case category of
@@ -36,14 +28,7 @@ createPostHandler Handle {..} author CreatePostRequest {..}
       _ -> do
         if all (`elem` ["png", "jpg", "jpeg"]) contentTypes
           then do
-            insertNewPost
-              title
-              text
-              categoryId
-              (U.userId author)
-              isPublished
-              base64Images
-              contentTypes
+            insertNewPost req (U.userId author)
             pure Success
           else pure WrongContentType
   | otherwise = pure NotAuthor

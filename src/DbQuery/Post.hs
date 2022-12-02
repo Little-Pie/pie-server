@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
 module DbQuery.Post where
@@ -17,19 +18,13 @@ import Database.PostgreSQL.Simple
   )
 import Database.PostgreSQL.Simple.Types (Query (..))
 import Helpers (withDbConnection)
+import Types.API.CreatePost (CreatePostRequest (..))
+import Types.Db (EditPost (..))
 import Types.Entities.GetPosts (GetPosts)
 import Types.Entities.Post (Post)
 
-insertNewPost ::
-  String ->
-  String ->
-  Int ->
-  Int ->
-  Bool ->
-  [String] ->
-  [String] ->
-  App ()
-insertNewPost title text categoryId userId isPublished base64Images contentTypes = do
+insertNewPost :: CreatePostRequest -> Int -> App ()
+insertNewPost CreatePostRequest {..} userId = do
   postId' <-
     mapM (pure . fromOnly)
       =<< withDbConnection
@@ -54,8 +49,8 @@ insertNewPost title text categoryId userId isPublished base64Images contentTypes
                 imageRows
           )
 
-editPost :: String -> String -> Int -> Int -> Bool -> [String] -> [String] -> App ()
-editPost title text categoryId postId isPublished base64Images contentTypes = do
+editPost :: EditPost -> App ()
+editPost EditPost {..} = do
   void $
     withDbConnection
       ( \conn ->
