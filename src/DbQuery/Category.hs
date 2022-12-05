@@ -31,7 +31,7 @@ getGeneralCategoryByName name =
     ( \conn ->
         query
           conn
-          "SELECT * FROM categories WHERE name=(?) AND \"parentId\"=null"
+          "SELECT * FROM categories WHERE name=(?) AND (\"parentId\" IS null)"
           (Only name)
     )
 
