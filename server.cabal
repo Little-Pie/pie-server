@@ -58,6 +58,7 @@ library
       Types.API.EditCategory
       Types.API.EditPost
       Types.API.PostWithImages
+      Types.API.User
       Types.Db
       Types.Entities.Category
       Types.Entities.GetPosts
