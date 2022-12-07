@@ -68,6 +68,11 @@ library
       Paths_server
   hs-source-dirs:
       src
+  default-extensions:
+      DeriveAnyClass
+      DeriveGeneric
+      OverloadedStrings
+      RecordWildCards
   ghc-options: -Wall -Werror
   build-depends:
       aeson
@@ -92,6 +97,11 @@ executable server-exe
       Paths_server
   hs-source-dirs:
       app
+  default-extensions:
+      DeriveAnyClass
+      DeriveGeneric
+      OverloadedStrings
+      RecordWildCards
   ghc-options: -Wall -Werror -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -125,6 +135,11 @@ test-suite server-test
       Paths_server
   hs-source-dirs:
       test
+  default-extensions:
+      DeriveAnyClass
+      DeriveGeneric
+      OverloadedStrings
+      RecordWildCards
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson

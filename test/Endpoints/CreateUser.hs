@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Endpoints.CreateUser where
 
 import Data.Functor.Identity (Identity)

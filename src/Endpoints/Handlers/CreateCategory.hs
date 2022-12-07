@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Endpoints.Handlers.CreateCategory where
 
 import Types.API.CreateCategory (CreateCategoryRequest (..))

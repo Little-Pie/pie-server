@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Endpoints.CreateCategory where
 
 import Data.Functor.Identity (Identity)

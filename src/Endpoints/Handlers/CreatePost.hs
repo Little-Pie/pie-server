@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Endpoints.Handlers.CreatePost where
 
 import Types.API.CreatePost (CreatePostRequest (..))
