@@ -10,6 +10,7 @@ import Database.PostgreSQL.Simple
   )
 import Helpers (withDbConnection)
 import Types.API.CreateUser (CreateUserRequest)
+import qualified Types.API.User as API
 import Types.Entities.User (User)
 
 getUsers :: App [User]
@@ -37,12 +38,12 @@ insertNewUser req = do
             req
       )
 
-showUsers :: Int -> Int -> App [User]
+showUsers :: Int -> Int -> App [API.User]
 showUsers limit offset =
   withDbConnection
     ( \conn ->
         query
           conn
-          "select * from users limit (?) offset (?)"
+          "select id,name,login,\"createdAt\",\"isAdmin\",\"isAuthor\" from users limit (?) offset (?)"
           (limit, offset)
     )
