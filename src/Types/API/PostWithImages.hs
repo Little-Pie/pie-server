@@ -1,6 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-
 module Types.API.PostWithImages where
 
 import Data.Aeson (ToJSON)

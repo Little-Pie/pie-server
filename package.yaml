@@ -35,6 +35,12 @@ dependencies:
 - hspec
 - mtl
 
+default-extensions:
+- DeriveAnyClass
+- DeriveGeneric
+- OverloadedStrings
+- RecordWildCards
+
 library:
   source-dirs: src
   ghc-options:

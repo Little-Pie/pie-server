@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Endpoints.Handlers.EditPost where
 
 import Data.Maybe (fromMaybe)

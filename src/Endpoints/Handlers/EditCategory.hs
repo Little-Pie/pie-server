@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Endpoints.Handlers.EditCategory where
 
 import Control.Applicative ((<|>))

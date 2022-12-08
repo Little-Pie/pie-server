@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Endpoints.Handlers.GetImageById where
 
 import Data.ByteString.Base64 (decode)

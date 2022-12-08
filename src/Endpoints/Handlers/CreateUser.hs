@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Endpoints.Handlers.CreateUser where
 
 import Hash (makeStringHash)

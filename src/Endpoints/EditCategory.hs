@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Endpoints.EditCategory where
 
 import Config (App)

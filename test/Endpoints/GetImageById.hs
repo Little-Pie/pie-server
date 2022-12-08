@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Endpoints.GetImageById where
 
 import Data.Functor.Identity (Identity (..))
